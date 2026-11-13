@@ -1,0 +1,26 @@
+{
+  "name": "ajo-bridge-contract",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Ajo Bridge rotating savings circle contract (near-sdk-js)",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "near-sdk-js build src/contract.js build/ajo_bridge.wasm",
+    "test": "npm run build && ava"
+  },
+  "dependencies": {
+    "near-sdk-js": "2.0.0"
+  },
+  "devDependencies": {
+    "ava": "^6.4.1",
+    "near-workspaces": "5.0.0"
+  },
+  "ava": {
+    "files": [
+      "tests/**/*.ava.js"
+    ],
+    "timeout": "10m",
+    "workerThreads": false
+  }
+}

@@ -57,7 +57,7 @@ export function runScenario(scenario) {
   });
   const circle = created.circle;
 
-  // Join: each member locks S_k minus whatever their vouchers will cover (never below the reserve).
+  // Join: every member reserves their slot; vouchers fill the gap; members cover whatever is left.
   for (let slot = 1; slot <= n; slot++) {
     const account = names[slot - 1];
     const required = requiredCollateral(circle, slot);

@@ -124,8 +124,13 @@ export function currentRecipient(circle) {
   return circle.members[circle.slots[circle.round - 1]];
 }
 
+/** Own-property lookup, so names such as "constructor" can never resolve to Object.prototype. */
+export function getMember(circle, account) {
+  return Object.prototype.hasOwnProperty.call(circle.members, account) ? circle.members[account] : null;
+}
+
 function memberOrFail(circle, account) {
-  return circle.members[account] ?? fail(`${account} is not a member of circle ${circle.id}`);
+  return getMember(circle, account) ?? fail(`${account} is not a member of circle ${circle.id}`);
 }
 
 // ---------------------------------------------------------------------------
@@ -223,13 +228,17 @@ function maybeStart(circle, out, now) {
  * Take an open payout slot. `deposit` is the member's own collateral: at least
  * MIN_RESERVE of S_k, at most S_k (anything above is refunded). A voucher can
  * fill the rest. The circle starts when all slots are taken and fully backed.
+ *
+ * A member who already holds the slot can call join again to add to their own
+ * stake, for example when a backer pulled out before the start.
  */
 export function join(circle, { account, slot, deposit, now }) {
   const attached = big(deposit);
   const at = big(now);
   if (circle.status !== STATUS.OPEN) fail('circle already started: joining is closed');
-  if (circle.members[account]) fail(`${account} already holds slot ${circle.members[account].slot}`);
   if (!Number.isInteger(slot) || slot < 1 || slot > circle.n) fail(`slot must be between 1 and ${circle.n}`);
+  const existing = getMember(circle, account);
+  if (existing) return addStake(circle, existing, { slot, attached, at });
   if (circle.slots[slot - 1] !== null) fail(`slot ${slot} is already taken`);
   const required = requiredCollateral(circle, slot);
   const reserve = minReserve(circle, slot);
@@ -267,21 +276,36 @@ export function join(circle, { account, slot, deposit, now }) {
   return out;
 }
 
+function addStake(circle, member, { slot, attached, at }) {
+  if (slot !== member.slot) fail(`${member.account} already holds slot ${member.slot}`);
+  const gap = requiredCollateral(circle, member.slot) - collateralOf(member);
+  if (gap <= 0n) fail(`slot ${member.slot} is already fully collateralised`);
+  if (attached <= 0n) fail('attach the collateral you want to add');
+  const out = effects();
+  circle.escrow += attached;
+  const accepted = minBig(attached, gap);
+  member.stake += accepted;
+  emit(circle, out, at, 'stake_added', { account: member.account, slot: member.slot, amount: accepted });
+  pay(circle, out, member.account, attached - accepted, 'excess_refund');
+  maybeStart(circle, out, at);
+  return out;
+}
+
 /**
- * Back a member by putting up part or all of their collateral. A voucher's
- * stake is slashed before the member's own. If the vouch over-fills S_k, the
- * member's own surplus stake is handed back to them.
+ * Back a member by filling part or all of the collateral they have not put up
+ * themselves. A voucher's stake is slashed before the member's own. A vouch can
+ * only fill the gap: it never displaces the member's own stake, so nobody can
+ * push a member out of their collateral and then cancel.
  */
 export function vouch(circle, { voucher, member: memberAccount, deposit, now }) {
   const attached = big(deposit);
   const at = big(now);
   if (circle.status !== STATUS.OPEN) fail('circle already started: vouching is closed');
   const member = memberOrFail(circle, memberAccount);
-  if (voucher === memberAccount) fail('you cannot vouch for yourself: join with your own collateral instead');
+  if (voucher === memberAccount) fail('you cannot vouch for yourself: call join again to add your own collateral');
   if (attached <= 0n) fail('attach the amount you want to vouch');
-  const required = requiredCollateral(circle, member.slot);
-  const room = required - vouchedTotal(member);
-  if (room <= 0n) fail(`${memberAccount} is already fully vouched`);
+  const gap = requiredCollateral(circle, member.slot) - collateralOf(member);
+  if (gap <= 0n) fail(`${memberAccount} is already fully collateralised`);
 
   const existing = member.vouches.find((v) => v.voucher === voucher);
   if (!existing && member.vouches.length >= LIMITS.MAX_VOUCHERS_PER_MEMBER) {
@@ -290,17 +314,11 @@ export function vouch(circle, { voucher, member: memberAccount, deposit, now }) 
 
   const out = effects();
   circle.escrow += attached;
-  const accepted = minBig(attached, room);
+  const accepted = minBig(attached, gap);
   if (existing) existing.amount += accepted;
   else member.vouches.push({ voucher, amount: accepted, slashed: 0n });
   emit(circle, out, at, 'vouched', { account: memberAccount, by: voucher, amount: accepted });
   pay(circle, out, voucher, attached - accepted, 'excess_refund');
-
-  const surplus = collateralOf(member) - required;
-  if (surplus > 0n) {
-    member.stake -= surplus;
-    pay(circle, out, memberAccount, surplus, 'stake_released_by_vouch');
-  }
   maybeStart(circle, out, at);
   return out;
 }

@@ -9,8 +9,11 @@
     "node": ">=22"
   },
   "scripts": {
-    "test": "npm run test:math",
+    "test": "npm run test:math && npm run test:contract",
     "test:math": "node --test \"shared/tests/*.test.js\"",
-    "demo": "node scripts/demo.js"
+    "test:contract": "npm --prefix contract test",
+    "build:contract": "npm --prefix contract run build",
+    "demo": "node scripts/demo.js",
+    "setup": "npm --prefix contract install"
   }
 }

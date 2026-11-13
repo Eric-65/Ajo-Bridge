@@ -58,7 +58,7 @@ test('join: first come first served, collateral is slot-priced, excess is refund
   assert.equal(circle.escrow, 8000n);
 
   assert.throws(() => join(circle, { account: 'bayo', slot: 1, deposit: 8000n, now: T0 }), /already taken/);
-  assert.throws(() => join(circle, { account: 'ada', slot: 2, deposit: 6000n, now: T0 }), /already holds/);
+  assert.throws(() => join(circle, { account: 'ada', slot: 2, deposit: 6000n, now: T0 }), /already holds slot 1/);
   assert.throws(() => join(circle, { account: 'bayo', slot: 6, deposit: 1n, now: T0 }), /slot must be/);
   assert.equal(minReserve(circle, 2), 600n);
   assert.throws(() => join(circle, { account: 'bayo', slot: 2, deposit: 599n, now: T0 }), /attach at least 600/);
@@ -96,17 +96,33 @@ test('leave before start refunds the member and their vouchers in full', () => {
 
 // ---------------------------------------------------------------- vouching
 
-test('vouch: a full vouch releases the member\'s own stake; over-vouching is refunded', () => {
+test('vouch fills only the gap: it never displaces the member\'s own stake', () => {
   const circle = newCircle();
   join(circle, { account: 'ada', slot: 1, deposit: 800n, now: T0 });
   const fx = vouch(circle, { voucher: 'uncle.london', member: 'ada', deposit: 9000n, now: T0 });
-  assert.equal(sent(fx, 'uncle.london'), 1000n, 'only S_k can be vouched');
-  assert.equal(sent(fx, 'ada'), 800n, 'the reservation is handed back once the backer covers everything');
-  assert.equal(circle.members.ada.stake, 0n);
+  assert.equal(sent(fx, 'uncle.london'), 1800n, 'only the missing 7200 is accepted');
+  assert.equal(sent(fx, 'ada'), 0n);
+  assert.equal(circle.members.ada.stake, 800n);
   assert.equal(collateralOf(circle.members.ada), 8000n);
-  assert.throws(() => vouch(circle, { voucher: 'aunt', member: 'ada', deposit: 1n, now: T0 }), /fully vouched/);
+  assert.throws(() => vouch(circle, { voucher: 'aunt', member: 'ada', deposit: 1n, now: T0 }), /fully collateralised/);
   assert.throws(() => vouch(circle, { voucher: 'ada', member: 'ada', deposit: 1n, now: T0 }), /yourself/);
   assert.throws(() => vouch(circle, { voucher: 'aunt', member: 'nobody', deposit: 1n, now: T0 }), /not a member/);
+  assert.throws(() => vouch(circle, { voucher: 'aunt', member: 'constructor', deposit: 1n, now: T0 }), /not a member/);
+});
+
+test('a member can add to their own stake by joining their slot again (backer pulled out)', () => {
+  const circle = newCircle();
+  join(circle, { account: 'ada', slot: 1, deposit: 800n, now: T0 });
+  vouch(circle, { voucher: 'uncle.london', member: 'ada', deposit: 7200n, now: T0 });
+  assert.throws(() => join(circle, { account: 'ada', slot: 1, deposit: 1n, now: T0 }), /already fully collateralised/);
+  cancelVouch(circle, { voucher: 'uncle.london', member: 'ada', now: T0 });
+  assert.equal(collateralOf(circle.members.ada), 800n, 'the cancelled vouch leaves the member\'s own stake alone');
+  assert.throws(() => join(circle, { account: 'ada', slot: 2, deposit: 100n, now: T0 }), /already holds slot 1/);
+  assert.throws(() => join(circle, { account: 'ada', slot: 1, deposit: 0n, now: T0 }), /attach the collateral/);
+  const fx = join(circle, { account: 'ada', slot: 1, deposit: 8000n, now: T0 });
+  assert.equal(circle.members.ada.stake, 8000n);
+  assert.equal(sent(fx, 'ada'), 800n, 'anything above S_k is refunded');
+  assert.equal(circle.escrow, 8000n);
 });
 
 test('vouch: several vouchers, capped; cancelVouch refunds before the start', () => {
@@ -253,9 +269,11 @@ test('INVARIANT with a voucher: the backer takes the loss, the walker + backer s
     ...terms, walkerSlot: 1, vouches: [{ slot: 1, voucher: 'uncle.london', amount: 8000n }],
   });
   const uncle = sim.ledger.find((row) => row.account === 'uncle.london');
-  assert.equal(uncle.net, -8000n, 'the voucher is slashed for all four missed rounds');
-  assert.equal(sim.walkerNet, 8000n - 80n, 'the walker keeps the pot, at their backer\'s expense');
-  assert.equal(sim.walkerSideNet, -80n);
+  // ada reserves slot 1 with 10% (800); the backer can only fill the missing 7200.
+  assert.equal(uncle.deposited - uncle.withdrawn, 7200n);
+  assert.equal(uncle.slashed, 7200n, 'the voucher is slashed before the walker\'s own 800');
+  assert.equal(sim.walkerNet, 7200n - 80n, 'the walker keeps most of the pot, at their backer\'s expense');
+  assert.equal(sim.walkerSideNet, -80n, 'together they are exactly where a lone walker would be');
   assert.ok(sim.othersMadeWhole);
   assert.equal(sim.shortfall, 0n);
 });

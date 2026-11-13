@@ -1,0 +1,15 @@
+node_modules/
+build/
+dist/
+.env
+.env.*
+!.env.example
+.near-credentials/
+neardev/
+.vercel/
+*.log
+.DS_Store
+
+# Agent skills are installed locally with `npx skills add near/agent-skills` (see skills-lock.json)
+.agents/
+.claude/

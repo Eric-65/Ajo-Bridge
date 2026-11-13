@@ -1,0 +1,16 @@
+{
+  "name": "ajo-bridge",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Rotating savings circles on NEAR where nobody can run off with the pot.",
+  "license": "MIT",
+  "type": "module",
+  "engines": {
+    "node": ">=22"
+  },
+  "scripts": {
+    "test": "npm run test:math",
+    "test:math": "node --test \"shared/tests/*.test.js\"",
+    "demo": "node scripts/demo.js"
+  }
+}

@@ -1,0 +1,98 @@
+/* Motion. Only transform and opacity are animated. Everything stops under prefers-reduced-motion. */
+
+@keyframes spin { to { transform: rotate(360deg); } }
+@keyframes pulse { 0%, 100% { opacity: 1; } 50% { opacity: 0.35; } }
+@keyframes halo { from { transform: scale(1); opacity: 0.9; } to { transform: scale(1.9); opacity: 0; } }
+@keyframes shimmer { to { transform: translateX(100%); } }
+@keyframes rise { from { opacity: 0; transform: translateY(1.75rem); } to { opacity: 1; transform: none; } }
+@keyframes wipe { from { clip-path: inset(0 100% 0 0); } to { clip-path: inset(0 0 0 0); } }
+@keyframes grow-x { from { transform: scaleX(0); } to { transform: scaleX(1); } }
+@keyframes drift { from { transform: scale(1.12) translateY(-3%); } to { transform: scale(1.12) translateY(3%); } }
+@keyframes drawer-up { from { transform: translateY(100%); } to { transform: none; } }
+@keyframes drawer-in { from { transform: translateX(100%); } to { transform: none; } }
+@keyframes fade { from { opacity: 0; } to { opacity: 1; } }
+@keyframes toast-in { from { opacity: 0; transform: translateY(1rem); } to { opacity: 1; transform: none; } }
+
+/* Staggered entrance for lists: set --i on each child. */
+.stagger > * { animation: rise var(--slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 70ms); }
+
+/* Segments and stat bars fill from the left, one after another. */
+.segments[data-animate='true'] .segments__seg { animation: grow-x 420ms var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms); }
+.segments[data-animate='true'] .segments__seg[data-state='current'] { animation: grow-x 420ms var(--ease-out) both, pulse 1.6s var(--ease-in-out) infinite; animation-delay: calc(var(--i, 0) * 80ms), 900ms; }
+.stat__bar { animation: grow-x 900ms var(--ease-out) both; }
+
+.scrim { animation: fade var(--base) both; }
+.drawer { animation: drawer-up var(--slow) var(--ease-out) both; }
+@media (min-width: 56rem) { .drawer { animation-name: drawer-in; } }
+.menu { animation: fade var(--base) both; }
+.menu a { animation: rise var(--slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 60ms); }
+.toast { animation: toast-in var(--base) var(--ease-out) both; }
+
+/*
+ * Scroll-driven reveals. Browsers with animation-timeline: view() run them off
+ * the scroll position with no JavaScript. Elsewhere motion/reveal.js adds
+ * .is-inview from an IntersectionObserver and the same keyframes play once.
+ */
+.reveal { opacity: 0; }
+.reveal.is-inview { animation: rise var(--slow) var(--ease-out) both; animation-delay: calc(var(--i, 0) * 80ms); }
+.reveal-wipe.is-inview { animation: wipe 900ms var(--ease-out) both; }
+
+@supports (animation-timeline: view()) {
+  .reveal {
+    opacity: 1;
+    animation: rise linear both;
+    animation-timeline: view();
+    animation-range: entry 5% entry 55%;
+  }
+  .reveal-wipe {
+    animation: wipe linear both;
+    animation-timeline: view();
+    animation-range: entry 0% cover 35%;
+  }
+  .panel__art > * {
+    animation: drift linear both;
+    animation-timeline: view();
+    animation-range: entry 0% exit 100%;
+  }
+}
+
+/* Animated conic border for the card that needs attention (uses @property --spin). */
+.attention { position: relative; isolation: isolate; }
+.attention::before {
+  content: '';
+  position: absolute;
+  inset: -2px;
+  z-index: -1;
+  background: conic-gradient(from var(--spin), var(--mint) 0 12%, transparent 12% 50%, var(--mint) 50% 62%, transparent 62%);
+  animation: border-spin 4s linear infinite;
+}
+.attention::after { content: ''; position: absolute; inset: 0; z-index: -1; background: var(--ink); }
+@keyframes border-spin { to { --spin: 360deg; } }
+
+/* Slash glitch: a short red flash driven from motion/glitch.js via this class. */
+.glitching { position: relative; }
+.glitch-flash { position: fixed; inset: 0; z-index: 95; background: var(--red); mix-blend-mode: multiply; pointer-events: none; opacity: 0; }
+.particle { position: fixed; z-index: 96; width: 8px; height: 8px; background: var(--mint); pointer-events: none; will-change: transform, opacity; }
+.chip-fly { position: fixed; z-index: 96; padding: 0.2rem 0.45rem; background: var(--red); color: var(--black); font-family: var(--font-display); font-weight: 700; font-size: 0.75rem; pointer-events: none; will-change: transform, opacity; }
+
+/* Route changes: View Transitions API, with a plain swap where unsupported. */
+@view-transition { navigation: auto; }
+::view-transition-old(root) { animation: 180ms var(--ease-in-out) both vt-out; }
+::view-transition-new(root) { animation: 420ms var(--ease-out) both vt-in; }
+@keyframes vt-out { to { opacity: 0; transform: translateY(-0.75rem); } }
+@keyframes vt-in { from { opacity: 0; clip-path: inset(0 0 100% 0); } to { opacity: 1; clip-path: inset(0); } }
+.header { view-transition-name: header; }
+
+@media (prefers-reduced-motion: reduce) {
+  html { scroll-behavior: auto; }
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    animation-delay: 0ms !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+  .reveal, .reveal-wipe { opacity: 1; animation: none !important; clip-path: none; }
+  .panel__art > * { animation: none !important; }
+  ::view-transition-old(root), ::view-transition-new(root) { animation: none !important; }
+}

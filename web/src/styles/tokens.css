@@ -1,0 +1,86 @@
+/*
+ * Design tokens. Every colour, size and duration in the app comes from here.
+ * Palette: near-black, white, greys, and one accent (mint). Red exists only for
+ * slashing and defaults.
+ */
+
+@property --sweep {
+  syntax: '<percentage>';
+  inherits: false;
+  initial-value: -40%;
+}
+
+@property --spin {
+  syntax: '<angle>';
+  inherits: false;
+  initial-value: 0deg;
+}
+
+:root {
+  /* colour */
+  --black: #0e0e0e;
+  --ink: #242424;
+  --ink-2: #333333;
+  --white: #ffffff;
+  --panel: #f3f3f3;
+  --panel-soft: #f9f9f9;
+  --line: #e4e4e4;
+  --line-dark: #3a3a3a;
+  --grey: #8c8c8c;
+  --grey-dark: #5c5c5c;
+  --grey-light: #b4b4b4;
+  --mint: #52ff9a;
+  --mint-pale: #bfffdb;
+  --mint-ink: #1d6b41; /* mint-family text that passes contrast on mint and on white */
+  --red: #ff4d4d;
+  --red-ink: #c81e1e;
+
+  /* type */
+  --font-display: 'Oxanium Variable', 'Oxanium', 'Chakra Petch', 'Arial Narrow', sans-serif;
+  --font-body: 'Inter Tight Variable', 'Inter Tight', 'Inter', 'Helvetica Neue', Arial, sans-serif;
+  --font-mono: 'JetBrains Mono', ui-monospace, 'SFMono-Regular', Menlo, monospace;
+
+  --text-xs: 0.8125rem; /* 13 helper */
+  --text-sm: 0.9375rem; /* 15 eyebrow */
+  --text-md: 1.0625rem; /* 17 subtitle */
+  --text-lg: clamp(1.25rem, 1.05rem + 0.9vw, 1.6rem);
+  --text-title: clamp(1.5rem, 1.25rem + 1.1vw, 2rem);
+  --text-display: clamp(2.05rem, 1.35rem + 3.4vw, 4.25rem);
+  --text-mega: clamp(3rem, 1.4rem + 8vw, 8.5rem);
+  --text-numeral: clamp(2.75rem, 2rem + 3.6vw, 4.75rem);
+
+  --tight: -0.02em;
+
+  /* space */
+  --gutter: clamp(1.0625rem, 0.4rem + 2.8vw, 3rem);
+  --s-1: 0.25rem;
+  --s-2: 0.5rem;
+  --s-3: 0.75rem;
+  --s-4: 1.0625rem;
+  --s-5: 1.5rem;
+  --s-6: 2rem;
+  --s-7: 3rem;
+  --s-8: clamp(3.5rem, 2.5rem + 4vw, 6.5rem);
+  --page: 78rem;
+  --header-h: 4.5rem;
+
+  /* shape: zero radius everywhere, corners are cut instead */
+  --cut-cta: 0.75rem;
+  --cut-card: 1.5rem;
+
+  --cta-sm: 2.5rem;
+  --cta-md: 3rem;
+  --cta-lg: 4.5rem;
+
+  /* motion */
+  --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+  --ease-in-out: cubic-bezier(0.65, 0, 0.35, 1);
+  --fast: 140ms;
+  --base: 280ms;
+  --slow: 620ms;
+
+  --focus: 0 0 0 2px var(--black), 0 0 0 5px var(--mint);
+  --z-header: 50;
+  --z-drawer: 80;
+  --z-toast: 90;
+}

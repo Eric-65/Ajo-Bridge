@@ -1,6 +1,8 @@
 import QRCode from 'qrcode';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
+import { PREVIEW_RECIPIENT, PREVIEW_REFUND } from '@shared/oneclickPreview.js';
+
 import { near } from '../lib/format.js';
 import { useApp } from '../lib/store.jsx';
 import { Cta, Drawer, NetLabel } from './ui.jsx';
@@ -15,12 +17,6 @@ const ROUTES = [
   { chain: 'eth', symbol: 'USDC', label: 'USDC', where: 'on Ethereum', family: 'evm' },
 ];
 
-/** Syntactically valid placeholder refund addresses, used ONLY for dry (preview) quotes. */
-const PREVIEW_REFUND = {
-  evm: '0x000000000000000000000000000000000000dEaD',
-  sol: '11111111111111111111111111111111',
-  tron: 'T9yD14Nj9j7xAB4dbGeiX9h8unkKHxuWwb',
-};
 const ADDRESS_HINT = { evm: '0x… address you are paying from', sol: 'Solana address you are paying from', tron: 'T… Tron address you are paying from' };
 const ADDRESS_RE = { evm: /^0x[0-9a-fA-F]{40}$/, sol: /^[1-9A-HJ-NP-Za-km-z]{32,44}$/, tron: /^T[1-9A-HJ-NP-Za-km-z]{33}$/ };
 const NEAR_ACCOUNT_RE = /^(([a-z\d]+[-_])*[a-z\d]+\.)*([a-z\d]+[-_])*[a-z\d]+$/;
@@ -92,7 +88,7 @@ export function PayDrawer({ circle, onClose }) {
           originAsset: route.token.assetId,
           destinationAsset: destination.assetId,
           amount: toSmallestUnit(usdValue, route.token),
-          recipient: NEAR_ACCOUNT_RE.test(recipient) ? recipient : 'near',
+          recipient: NEAR_ACCOUNT_RE.test(recipient) ? recipient : PREVIEW_RECIPIENT,
           refundTo: ADDRESS_RE[route.family].test(refundTo) ? refundTo : PREVIEW_REFUND[route.family],
         });
         if (id === requestId.current) setPreview({ state: 'ready', quote: data.quote });

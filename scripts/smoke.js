@@ -14,15 +14,16 @@ import path from 'node:path';
 import { fileURLToPath } from 'node:url';
 
 import { buildQuoteRequest } from '../api/quote.js';
+import { PREVIEW_RECIPIENT, PREVIEW_REFUND } from '../shared/oneclickPreview.js';
 
 const root = path.resolve(path.dirname(fileURLToPath(import.meta.url)), '..');
 try { process.loadEnvFile(path.join(root, '.env')); } catch { /* use the real environment */ }
 
 const ONECLICK = process.env.ONECLICK_BASE_URL || 'https://1click.chaindefuser.com';
 const RPC = process.env.NEAR_RPC_URL || 'https://test.rpc.fastnear.com';
-const CONTRACT = process.env.AJO_CONTRACT_ID || process.env.VITE_AJO_CONTRACT_ID;
+const CONTRACT = process.env.AJO_CONTRACT_ID || process.env.VITE_AJO_CONTRACT_ID || 'ajobridge-circles.testnet';
 const NEAR_AI = process.env.NEAR_AI_BASE_URL || 'https://cloud-api.near.ai/v1';
-const SITE = process.env.SMOKE_URL?.replace(/\/$/, '');
+const SITE = (process.env.SMOKE_URL || 'https://ajo-bridge.vercel.app').replace(/\/$/, '');
 
 let failures = 0;
 const ok = (label, detail = '') => console.log(`  ✓ ${label}${detail ? ` — ${detail}` : ''}`);
@@ -58,21 +59,29 @@ try {
   tokens = await json(`${ONECLICK}/v0/tokens`);
   ok('GET /v0/tokens', `${tokens.length} tokens`);
 } catch (error) { bad('GET /v0/tokens', error); }
-const usdcBase = tokens.find((t) => t.blockchain === 'base' && t.symbol === 'USDC');
 const wnear = tokens.find((t) => t.blockchain === 'near' && t.symbol === 'wNEAR');
-if (usdcBase && wnear) {
+// The routes the pay drawer offers first, quoted exactly as the drawer quotes a preview.
+const ROUTES = [
+  { chain: 'base', symbol: 'USDC', family: 'evm' },
+  { chain: 'tron', symbol: 'USDT', family: 'tron' },
+  { chain: 'sol', symbol: 'SOL', family: 'sol' },
+];
+const headers = { 'Content-Type': 'application/json' };
+if (process.env.ONECLICK_JWT) headers.Authorization = `Bearer ${process.env.ONECLICK_JWT}`;
+for (const route of tokens.length ? ROUTES : []) {
+  const label = `POST /v0/quote (dry) $20 of ${route.symbol} on ${route.chain} → wNEAR`;
+  const token = tokens.find((t) => t.blockchain === route.chain && t.symbol === route.symbol);
+  if (!token || !wnear) { bad(label, 'token not in the 1Click list: PayDrawer routes may need new symbols'); continue; }
   try {
+    const units = (20 / (Number(token.price) || 1)) * 10 ** Math.min(token.decimals, 12);
+    const amount = (BigInt(Math.round(units)) * 10n ** BigInt(Math.max(0, token.decimals - 12))).toString();
     const request = buildQuoteRequest({
-      dry: true, originAsset: usdcBase.assetId, destinationAsset: wnear.assetId, amount: '20000000',
-      recipient: 'near', refundTo: '0x000000000000000000000000000000000000dEaD',
+      dry: true, originAsset: token.assetId, destinationAsset: wnear.assetId, amount,
+      recipient: PREVIEW_RECIPIENT, refundTo: PREVIEW_REFUND[route.family],
     });
-    const headers = { 'Content-Type': 'application/json' };
-    if (process.env.ONECLICK_JWT) headers.Authorization = `Bearer ${process.env.ONECLICK_JWT}`;
     const quote = await json(`${ONECLICK}/v0/quote`, { method: 'POST', headers, body: JSON.stringify(request) });
-    ok('POST /v0/quote (dry)', `20 USDC on Base → ${quote.quote?.amountOutFormatted} wNEAR, ~${quote.quote?.timeEstimate}s`);
-  } catch (error) { bad('POST /v0/quote (dry)', error); }
-} else if (tokens.length) {
-  bad('find USDC on Base and wNEAR in the token list', 'not found: PayDrawer routes may need new symbols');
+    ok(label, `${quote.quote?.amountOutFormatted} wNEAR, ~${quote.quote?.timeEstimate}s`);
+  } catch (error) { bad(label, error); }
 }
 
 console.log('\n2. NEAR testnet contract');

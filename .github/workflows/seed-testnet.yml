@@ -1,0 +1,49 @@
+name: Seed testnet circles
+
+# Run by hand from the Actions tab. Creates three throwaway accounts with NEAR's
+# testnet faucet (keys exist only on this temporary machine and are wiped), then
+# runs scripts/seed-testnet.js, which signs create_circle, join, vouch, leave,
+# contribute and settle_round against the live contract and prints every
+# transaction hash. Testnet NEAR has no real value.
+on:
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+concurrency: seed-testnet
+
+jobs:
+  seed:
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - run: npm --prefix agent ci
+      - run: npm install -g near-cli-rs@0.31.1
+      - name: Create three faucet accounts
+        run: |
+          set -euo pipefail
+          redact() { sed -E 's/ed25519:[1-9A-HJ-NP-Za-km-z]{60,}/ed25519:[redacted]/g'; }
+          accounts=""
+          for x in a b c; do
+            id="ajoseed-${GITHUB_RUN_ID}-$x.testnet"
+            near account create-account sponsor-by-faucet-service "$id" autogenerate-new-keypair \
+              save-to-legacy-keychain network-config testnet create 2>&1 | redact
+            file=$(find "$HOME/.near-credentials/testnet" -name '*.json' -path "*$id*" | head -1)
+            key=$(node -e "console.log(require('$file').private_key)")
+            echo "::add-mask::$key"
+            accounts="${accounts:+$accounts,}$id:$key"
+            sleep 3
+          done
+          echo "SEED_ACCOUNTS=$accounts" >> "$GITHUB_ENV"
+      - name: Seed circles (signed testnet transactions)
+        env:
+          NEAR_RPC_URL: https://rpc.testnet.near.org
+        run: npm run seed:testnet
+      - name: Wipe keys
+        if: always()
+        run: rm -rf "$HOME/.near-credentials"

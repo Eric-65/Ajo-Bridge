@@ -18,6 +18,7 @@
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
     "agent": "node agent/alajo.js",
-    "smoke": "node scripts/smoke.js"
+    "smoke": "node scripts/smoke.js",
+    "seed:testnet": "node scripts/seed-testnet.js"
   }
 }

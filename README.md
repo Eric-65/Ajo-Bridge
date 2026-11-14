@@ -97,11 +97,11 @@ Run `npm run setup` once first.
 | Shared math + circle engine, 43 unit tests | Done, passing |
 | near-sdk-js contract, 10 sandbox tests | Done, passing |
 | Web app (demo mode: every screen works with no wallet) | Done |
-| Pay-from-any-chain (1Click proxy + drawer) | Written, **not exercised against the live API** |
-| Alajo agent + `/api/alajo` | Written; rule-based answers tested, **NEAR AI Cloud and testnet calls not exercised** |
+| Pay-from-any-chain (1Click proxy + drawer) | **Verified live** (Actions → Live checks): mainnet dry quotes for $20 of USDC on Base and SOL, and $120 of USDT on Tron (1Click currently enforces a $100 minimum on that route), and the hosted `/api/tokens` proxy. A real deposit has not been made |
+| Alajo agent + `/api/alajo` | Hosted `/api/alajo` verified live (rule-based answers). **NEAR AI Cloud phrasing not exercised** (no API key configured). On the deployed contract the agent is the locked contract account itself, so `post_note` cannot be called there |
 | Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
-| Testnet deployment | **Not deployed yet** — no contract address. Run `contract/scripts/deploy.sh` |
-| Hosted demo | https://ajo-bridge.vercel.app — runs in demo mode until the testnet contract is deployed |
+| Testnet deployment | **Deployed:** [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet), by Actions → Deploy contract to testnet. Initialised, checked with `get_config`, and **locked**: its only full-access key was deleted, so nobody can change its code |
+| Hosted demo | https://ajo-bridge.vercel.app — demo data until you connect a testnet wallet; then circles are read from and signed against `ajobridge-circles.testnet`. The signed wallet flow has not yet been run end to end |
 
 The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Cloud or Vercel, so everything that needs those is written from the official docs and marked above. Everything else was run and verified.
 
@@ -110,7 +110,7 @@ The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Clo
 | Part | Network | Real or simulated |
 | --- | --- | --- |
 | Circle rules (`shared/ajoEngine.js`) | — | Real code, shared by contract, tests and UI |
-| Contract | NEAR **testnet** | Real contract; **not deployed yet**, verified on the local NEAR sandbox |
+| Contract | NEAR **testnet** | Real contract at `ajobridge-circles.testnet` (code locked); also verified on the local NEAR sandbox |
 | Web app with a wallet connected | NEAR **testnet** | Real view calls and signed transactions (needs the deployed contract) |
 | Web app without a wallet (**DEMO DATA** badge) | none | Simulated: seeded circles run locally on the same engine. The demo clock can be skipped forward |
 | Pay-from-any-chain quotes and deposits | **mainnet** (NEAR Intents 1Click) | Real quotes and real funds when the API is reachable. Never mocked: if the API is down the drawer says so |
@@ -285,7 +285,7 @@ SMOKE_URL=https://your-app.vercel.app npm run smoke
 
 `npm run smoke` talks only to real services and exits non-zero if anything fails. `vercel build` was run locally on a fresh copy of the repository: it produces the static site plus four functions (`alajo`, `quote`, `status`, `tokens`).
 
-Live URL: https://ajo-bridge.vercel.app. Deployed contract address: _not deployed yet_.
+Live URL: https://ajo-bridge.vercel.app. Deployed contract: [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet) (no access keys: code cannot be changed).
 
 ## Hackathon rules (answers to the HACKATHON.md FAQ)
 
@@ -318,7 +318,7 @@ Front-end notes: no Tailwind, UI kit, CSS-in-JS or animation library. Design tok
 ## Known limitations
 
 - **Not deployed and not audited.** Testnet funds only.
-- The contract account still has a full-access key, and whoever holds it could deploy different code. For real money that key should be deleted or handed to a DAO.
+- The deployed testnet contract has **no access keys**, so its code cannot be changed by anyone. The flip side: a bug fix means deploying a new contract account. Deploying with `contract/scripts/deploy.sh` instead keeps a full-access key, and for real money that key should be deleted or handed to a DAO.
 - Payouts are plain NEAR transfers. If a recipient deletes their account, the transfer bounces back to the contract and stays there.
 - The storage fee is a flat estimate (8,000 bytes plus 2,500 per member, about 0.2 NEAR for five members), not metered per byte.
 - v1 uses native NEAR, not a stablecoin, so contributions carry NEAR price risk.

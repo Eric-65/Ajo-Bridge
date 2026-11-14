@@ -41,8 +41,9 @@ jobs:
           done
           echo "SEED_ACCOUNTS=$accounts" >> "$GITHUB_ENV"
       - name: Seed circles (signed testnet transactions)
+        timeout-minutes: 8
         env:
-          NEAR_RPC_URL: https://rpc.testnet.near.org
+          NEAR_RPC_URL: https://test.rpc.fastnear.com
         run: npm run seed:testnet
       - name: Wipe keys
         if: always()

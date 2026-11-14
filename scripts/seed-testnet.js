@@ -29,10 +29,10 @@ let near;
 try { near = await import('near-api-js'); } catch {
   near = await import(pathToFileURL(path.join(root, 'agent/node_modules/near-api-js/lib/index.js')).href);
 }
-const { Account, JsonRpcProvider, actions } = near;
+const { Account, FailoverRpcProvider, JsonRpcProvider, actions } = near;
 
 const CONTRACT = process.env.AJO_CONTRACT_ID || 'ajobridge-circles.testnet';
-const RPC = process.env.NEAR_RPC_URL || 'https://rpc.testnet.near.org';
+const RPCS = [process.env.NEAR_RPC_URL, 'https://test.rpc.fastnear.com', 'https://rpc.testnet.near.org'].filter((u, i, all) => u && all.indexOf(u) === i);
 const GAS = 100_000_000_000_000n;
 const n = (x) => BigInt(Math.round(x * 1000)) * 10n ** 21n; // decimal NEAR → yocto
 const fmt = (yocto) => (Number(BigInt(yocto) / 10n ** 21n) / 1000).toFixed(3);
@@ -42,7 +42,7 @@ if (raw.length < 3) {
   console.error('Set SEED_ACCOUNTS to three testnet accounts: "id:ed25519:key,id:ed25519:key,id:ed25519:key"');
   process.exit(1);
 }
-const provider = new JsonRpcProvider({ url: RPC });
+const provider = new FailoverRpcProvider(RPCS.map((url) => new JsonRpcProvider({ url }, { retries: 2, backoff: 2, wait: 500 })));
 const [a, b, c] = raw.slice(0, 3).map((entry) => {
   const i = entry.indexOf(':');
   return new Account(entry.slice(0, i), provider, entry.slice(i + 1));
@@ -53,6 +53,7 @@ const log = [];
 const sleep = (ms) => new Promise((resolve) => setTimeout(resolve, ms));
 
 async function call(account, methodName, args, deposit = 0n, label = methodName) {
+  const started = Date.now();
   const outcome = await account.signAndSendTransaction({
     receiverId: CONTRACT,
     actions: [actions.functionCall(methodName, args, GAS, deposit)],
@@ -65,7 +66,7 @@ async function call(account, methodName, args, deposit = 0n, label = methodName)
     try { value = JSON.parse(Buffer.from(outcome.status.SuccessValue, 'base64').toString()); } catch { /* no value */ }
   }
   log.push({ label, method: methodName, account: account.accountId, hash });
-  console.log(`  ✓ ${label.padEnd(44)} ${hash}`);
+  console.log(`  ✓ ${label.padEnd(44)} ${hash}  (${((Date.now() - started) / 1000).toFixed(1)} s)`);
   return value;
 }
 

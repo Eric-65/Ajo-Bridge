@@ -108,12 +108,12 @@ Run `npm run setup` once first.
 | --- | --- |
 | Shared math + circle engine, 43 unit tests | Done, passing |
 | near-sdk-js contract, 10 sandbox tests | Done, passing |
-| Web app (demo mode: every screen works with no wallet) | Done |
-| Pay-from-any-chain (1Click proxy + drawer) | **Verified live** (Actions → Live checks): mainnet dry quotes for $20 of USDC on Base and SOL, and $120 of USDT on Tron (1Click currently enforces a $100 minimum on that route), and the hosted `/api/tokens` proxy. A real deposit has not been made |
-| Alajo agent + `/api/alajo` | Hosted `/api/alajo` verified live (rule-based answers). **NEAR AI Cloud phrasing not exercised** (no API key configured). On the deployed contract the agent is the locked contract account itself, so `post_note` cannot be called there |
+| Web app | **Live by default** (since Nov 14): reads `ajobridge-circles.testnet` with view calls, no wallet needed; signing needs a testnet wallet. Demo is opt-in (**Try the demo**) or automatic if no RPC answers |
+| Pay-from-any-chain (1Click proxy + drawer) | **Quotes verified live** (Actions → Live checks): mainnet `dry` quotes for $20 of USDC on Base and SOL, $120 of USDT on Tron (1Click has a $100 minimum on that route), and the hosted `/api/tokens` proxy. **Not tested:** a real deposit (`dry: false`) and the status tracker after a deposit |
+| Alajo (`/api/alajo`, `agent/alajo.js`) | **Verified live:** the hosted `/api/alajo` answers from circle state with the built-in English/Pidgin/Yoruba templates. **Not tested:** NEAR AI Cloud phrasing (no API key configured), and the agent script against testnet. On the deployed contract the agent is the locked contract itself, so `post_note` cannot be called there |
 | Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
 | Testnet deployment | **Deployed:** [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet), by Actions → Deploy contract to testnet. Initialised, checked with `get_config`, and **locked**: its only full-access key was deleted, so nobody can change its code |
-| Hosted demo | https://ajo-bridge.vercel.app — demo data until you connect a testnet wallet; then circles are read from and signed against `ajobridge-circles.testnet`. The signed wallet flow has not yet been run end to end |
+| Hosted site | https://ajo-bridge.vercel.app — opens in LIVE mode on NEAR testnet. **Live checks** opens it in a real browser and confirms it lists circles from the chain |
 
 The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Cloud or Vercel, so everything that needs those is written from the official docs and marked above. Everything else was run and verified.
 
@@ -123,8 +123,8 @@ The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Clo
 | --- | --- | --- |
 | Circle rules (`shared/ajoEngine.js`) | — | Real code, shared by contract, tests and UI |
 | Contract | NEAR **testnet** | Real contract at `ajobridge-circles.testnet` (code locked); also verified on the local NEAR sandbox |
-| Web app with a wallet connected | NEAR **testnet** | Real view calls and signed transactions (needs the deployed contract) |
-| Web app without a wallet (**DEMO DATA** badge) | none | Simulated: seeded circles run locally on the same engine. The demo clock can be skipped forward |
+| Web app (default) | NEAR **testnet** | **Real.** Circles, members, pots, history and totals are read from the contract; signing with a testnet wallet sends real transactions |
+| Web app after **Try the demo** (striped **DEMO** label) | none | Simulated: seeded circles run locally on the same engine; the demo clock can be skipped. Only used when you choose it, or when no RPC answers (a banner says so) |
 | Pay-from-any-chain quotes and deposits | **mainnet** (NEAR Intents 1Click) | Real quotes and real funds when the API is reachable. Never mocked: if the API is down the drawer says so |
 | What a 1Click payment does | **mainnet** | Delivers wNEAR to the payer's mainnet account. It does **not** pay the testnet round automatically |
 | Alajo answers | — | From real circle state. Phrased by NEAR AI Cloud when `NEAR_AI_API_KEY` is set; otherwise by built-in templates, labelled as such |
@@ -310,6 +310,17 @@ Live URL: https://ajo-bridge.vercel.app. Deployed contract: [`ajobridge-circles.
 | Testnet-only contract? (Q-010) | Yes, the circle contract targets testnet. Only the 1Click integration is mainnet, because it is mainnet-only. |
 | Can judges run it without a hosted demo? (Q-012) | Yes: `npm run test:math`, `npm run demo` and `npm run dev` (demo mode) need no keys and no network. |
 | License (Q-014) | MIT, see [LICENSE](LICENSE). |
+
+## From hackathon to small business
+
+A roadmap, not shipped code.
+
+1. **Stablecoin circles.** Contributions and collateral in USDC (a NEP-141 token) instead of native NEAR, so savings do not swing with the NEAR price.
+2. **Cross-chain payments that credit the round.** Today a 1Click payment lands in the payer's own NEAR account. Next: the 1Click deposit lands in the contract and credits that member's contribution for the current round.
+3. **An honest organiser fee.** An operator fee (for example 1% of each payout), split between the circle's creator and the platform and enforced by the contract. The alajo's role becomes a paid, transparent job instead of a position of trust.
+4. **Naira on- and off-ramps** through local partners, and identity checks for large circles.
+5. **Before real money:** a security audit, a mainnet deployment, and a legal review. Pooled savings schemes are regulated in Nigeria.
+6. **Pilot:** three real ajo groups (market traders, a church group, a diaspora family) running a four-week circle.
 
 ## Repository layout
 

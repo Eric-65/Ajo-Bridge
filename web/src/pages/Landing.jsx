@@ -4,7 +4,7 @@ import { useNavigate } from 'react-router';
 import { slotTable, walkAwayPayoff } from '@shared/ajoMath.js';
 import { parseNear } from '@shared/units.js';
 
-import { HalftoneArt } from '../components/Art.jsx';
+import { HalftoneArt, Photo } from '../components/Art.jsx';
 import { SavingsRing } from '../components/SavingsRing.jsx';
 import { SlotPicker } from '../components/SlotPicker.jsx';
 import { Ticker } from '../components/Ticker.jsx';
@@ -159,7 +159,7 @@ export function LandingPage() {
 
       <section className="panels" aria-label="Who it is for">
         <article className="panel">
-          <div className="panel__art"><HalftoneArt variant="dunes" /></div>
+          <div className="panel__art"><Photo name="diaspora" position="55% 22%" /></div>
           <div className="wrap panel__copy">
             <p className="panel__kicker">Lagos · London · Houston</p>
             <h2 className="title">Diaspora backs, home borrows</h2>
@@ -168,7 +168,7 @@ export function LandingPage() {
           </div>
         </article>
         <article className="panel">
-          <div className="panel__art"><HalftoneArt variant="rain" /></div>
+          <div className="panel__art"><Photo name="portrait-red" position="50% 20%" /></div>
           <div className="wrap panel__copy">
             <p className="panel__kicker">Base · Solana · Tron</p>
             <h2 className="title">Pay from any chain</h2>
@@ -176,6 +176,16 @@ export function LandingPage() {
             <Cta to={`/circle/${active?.id ?? 0}?pay=1`}>See a live quote</Cta>
           </div>
         </article>
+      </section>
+
+      <section className="panel panel--wide" aria-labelledby="walk-title">
+        <div className="panel__art"><Photo name="veil" position="50% 36%" /></div>
+        <div className="wrap panel__copy">
+          <p className="panel__kicker">The walk-away test</p>
+          <h2 className="title" id="walk-title">Collect first, then vanish</h2>
+          <p className="subtitle">The oldest trick in the circle: take the pot early and stop paying. Watch the contract pay everyone else from the lock, round by round.</p>
+          <Cta to="/simulator">Watch it happen</Cta>
+        </div>
       </section>
 
       <section className="section on-soft" aria-labelledby="numbers">

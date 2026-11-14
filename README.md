@@ -117,7 +117,7 @@ The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Clo
 | What a 1Click payment does | **mainnet** | Delivers wNEAR to the payer's mainnet account. It does **not** pay the testnet round automatically |
 | Alajo answers | — | From real circle state. Phrased by NEAR AI Cloud when `NEAR_AI_API_KEY` is set; otherwise by built-in templates, labelled as such |
 | Alajo settling rounds / posting notes | NEAR **testnet** | Real transactions with a function-call key (needs the deployed contract) |
-| Hero imagery | — | Generated in the browser (halftone canvas). No photographs |
+| Imagery | — | Six stock photographs from Pixabay, used as mood images only. The people shown are models, not users of Ajo Bridge. The hero's dot field is drawn in the browser |
 
 ## How it works
 
@@ -335,7 +335,8 @@ Earlier onchain ROSCAs include WeTrust's Trusted Lending Circles on Ethereum and
 ## Credits
 
 - **Visual direction**: styled after the layout language of an editorial agency template supplied by the project owner (near-black, white and mint; squared display type; cut-corner bars). No brand names, logos, text or photographs from that template are used.
-- **Images**: none. The black-and-white fields are drawn in the browser by `web/src/motion/halftone.js`.
+- **Photographs**: six images from [Pixabay](https://pixabay.com), used under the [Pixabay Content License](https://pixabay.com/service/license-summary/) (free for commercial and non-commercial use, no attribution required). Supplied by the project owner, converted to black and white with a vignette and grain, and resized to WebP in `web/public/img/`. They are mood images: the people shown are models and are not users of, or endorsing, Ajo Bridge.
+- **Hero dot field**: drawn in the browser by `web/src/motion/halftone.js`.
 - **Fonts** (SIL Open Font License, self-hosted through Fontsource): Oxanium, Inter Tight, JetBrains Mono.
 - **Libraries**: near-sdk-js, near-workspaces, ava, near-api-js, @hot-labs/near-connect, React, React Router, Vite, qrcode.
 

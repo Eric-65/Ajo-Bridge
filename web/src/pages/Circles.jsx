@@ -1,3 +1,4 @@
+import { PhotoHead } from '../components/Art.jsx';
 import { Cta, Eyebrow, Scramble, SegmentBar, Skeleton } from '../components/ui.jsx';
 import { near, percent, roundLength } from '../lib/format.js';
 import { useApp, useCircles } from '../lib/store.jsx';
@@ -9,13 +10,11 @@ export function CirclesPage() {
   const { data: circles, error, loading } = useCircles();
   return (
     <>
-      <section className="section section--tight on-black">
-        <div className="wrap stack">
-          <Eyebrow>{mode === 'testnet' ? 'NEAR testnet contract' : 'Demo data, running in your browser'}</Eyebrow>
-          <Scramble as="h1" className="display" text="Circles" />
-          <p className="subtitle">Join one that is filling, or follow one that is running.</p>
-        </div>
-      </section>
+      <PhotoHead photo="roots" position="40% 30%">
+        <Eyebrow>{mode === 'testnet' ? 'NEAR testnet contract' : 'Demo data, running in your browser'}</Eyebrow>
+        <Scramble as="h1" className="display" text="Circles" />
+        <p className="subtitle">Savings circles are centuries old. These ones keep their own books. Join one that is filling, or follow one that is running.</p>
+      </PhotoHead>
       <section className="section section--tight">
         <div className="wrap stack stack--lg">
           {loading && !circles ? <Skeleton lines={5} /> : null}

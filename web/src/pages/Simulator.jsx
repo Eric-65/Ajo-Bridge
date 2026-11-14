@@ -1,3 +1,4 @@
+import { PhotoHead } from '../components/Art.jsx';
 import { useEffect, useMemo, useRef, useState } from 'react';
 
 import { parseNear } from '@shared/units.js';
@@ -77,13 +78,11 @@ export function SimulatorPage() {
 
   return (
     <>
-      <section className="section section--tight on-black">
-        <div className="wrap stack">
-          <Eyebrow>The walk-away test</Eyebrow>
-          <Scramble as="h1" className="display" text="Collect the pot, then vanish. Watch what happens." />
-          <p className="subtitle">Five members, 20 NEAR a round, 1% order fee. Same engine as the contract, running in your browser.</p>
-        </div>
-      </section>
+      <PhotoHead photo="hands" position="50% 45%">
+        <Eyebrow>The walk-away test</Eyebrow>
+        <Scramble as="h1" className="display" text="Collect the pot, then vanish. Watch what happens." />
+        <p className="subtitle">Five members, 20 NEAR a round, 1% order fee. Same engine as the contract, running in your browser.</p>
+      </PhotoHead>
 
       <section className="section section--tight on-panel" aria-label="Scenario">
         <div className="wrap split split--even">

@@ -1,3 +1,4 @@
+import { PhotoHead } from '../components/Art.jsx';
 import { useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
@@ -60,12 +61,10 @@ export function CreatePage() {
 
   return (
     <>
-      <section className="section section--tight on-black">
-        <div className="wrap stack">
-          <Eyebrow>New circle</Eyebrow>
-          <Scramble as="h1" className="display" text="Set the rules once. The contract keeps them." />
-        </div>
-      </section>
+      <PhotoHead photo="thinker" position="50% 35%">
+        <Eyebrow>New circle</Eyebrow>
+        <Scramble as="h1" className="display" text="Set the rules once. The contract keeps them." />
+      </PhotoHead>
       <section className="section section--tight on-panel">
         <form className="wrap split" onSubmit={submit} noValidate>
           <div className="stack stack--lg">

@@ -1,0 +1,30 @@
+name: Live checks
+
+# Run by hand from the Actions tab. Calls the real services the app depends on:
+# NEAR Intents 1Click (token list + dry quotes for the pay drawer's routes),
+# the deployed testnet contract, and the hosted site's /api routes.
+# Nothing is signed and no funds move. See scripts/smoke.js.
+on:
+  workflow_dispatch:
+    inputs:
+      site:
+        description: Hosted site to check
+        required: false
+        default: https://ajo-bridge.vercel.app
+
+permissions:
+  contents: read
+
+jobs:
+  smoke:
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+      - env:
+          SMOKE_URL: ${{ inputs.site }}
+          NEAR_RPC_URL: https://rpc.testnet.near.org
+        run: npm run smoke

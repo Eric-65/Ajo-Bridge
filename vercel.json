@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "test -d web || { echo 'Ajo Bridge: set Root Directory to the repository root (leave it empty): Vercel > Project Settings > Build and Deployment > Root Directory. The API functions in /api are only deployed from the repository root.' >&2; exit 1; }; cd web && npm ci",
+  "installCommand": "test -d web || { echo 'Set Vercel Root Directory to ./ (repo root), not web' >&2; exit 1; }; cd web && npm ci",
   "buildCommand": "cd web && npm run build",
   "outputDirectory": "web/dist",
   "rewrites": [

@@ -1,6 +1,6 @@
 {
   "$schema": "https://openapi.vercel.sh/vercel.json",
-  "installCommand": "test -d web || { echo 'Set Vercel Root Directory to ./ (repo root), not web' >&2; exit 1; }; cd web && npm ci",
+  "installCommand": "cd web && npm ci",
   "buildCommand": "cd web && npm run build",
   "outputDirectory": "web/dist",
   "rewrites": [

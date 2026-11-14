@@ -331,7 +331,7 @@ export function CirclePage() {
                   <dl className="member__grid">
                     <div><dt>Collateral</dt><dd>{near(collateralOf(m))} / {near(required)}</dd></div>
                     <div><dt>Vouched by</dt><dd>{vouchedTotal(m) > 0n ? `${m.vouches.map((v) => shortName(v.voucher)).join(', ')} · ${near(vouchedTotal(m))}` : '—'}</dd></div>
-                    <div><dt>Rounds paid</dt><dd><Meter total={circle.n} filled={paidRounds} late={m.missed} /> <span className="sr-only">{paidRounds} paid, {m.missed} missed</span></dd></div>
+                    <div><dt>Track record</dt><dd><Meter total={circle.n} filled={paidRounds} late={m.missed} /> <span className="trust">{paidRounds} paid · {m.missed} missed</span></dd></div>
                     <div><dt>{m.slashed + m.vouch_slashed > 0n ? 'Slashed' : 'Received'}</dt><dd className={m.slashed + m.vouch_slashed > 0n ? 'danger' : undefined}>{near(m.slashed + m.vouch_slashed > 0n ? m.slashed + m.vouch_slashed : m.received)} NEAR</dd></div>
                   </dl>
                 </li>

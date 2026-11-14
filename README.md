@@ -131,7 +131,7 @@ Signed against `ajobridge-circles.testnet` on Nov 14, 2026 by `scripts/seed-test
 | `contribute` | round 1 (the other member does not pay) | [J9A4AT6T9H…](https://testnet.nearblocks.io/txns/J9A4AT6T9HiPvxsopHq6876iro2ToXakznjmEWR3gkVN) |
 | `settle_round` | after the deadline, by a third account: the non-payer is slashed 0.5 NEAR, the recipient is paid | [Hn7EPVegPw…](https://testnet.nearblocks.io/txns/Hn7EPVegPwoBNWTKiy6mX3J5yPD235izUiZsDd9Xy6Qr) |
 
-**Not yet run end to end:** the same flows signed through Meteor Wallet in the browser. The app code for it is in place (`web/src/lib/chain.js`); try steps L3–L8 above. An earlier seeding run stalled on a rate-limited RPC and left partial circles #0–#2 on the contract.
+**Not yet run end to end:** the same flows signed through Meteor Wallet in the browser. The app code for it is in place (`web/src/lib/chain.js`); try steps L3–L8 above. An earlier seeding run was slowed by a rate-limited RPC and also created circles #0–#2 with the same names; they are real but duplicates.
 
 ### C. Contract on a local NEAR sandbox
 
@@ -388,7 +388,7 @@ Front-end notes: no Tailwind, UI kit, CSS-in-JS or animation library. Design tok
 - v1 uses native NEAR, not a stablecoin, so contributions carry NEAR price risk.
 - Cross-chain payments land on mainnet while circles are on testnet; they are not linked on chain in this version.
 - Members who miss a payment lose their whole fee share, even for one late round. Late payments are accepted until somebody calls `settle_round`.
-- The wallet flow and the 1Click and NEAR AI Cloud calls were written from documentation and have not been run against the live services.
+- Not yet run against live services: signing through Meteor Wallet in the browser (the same contract calls were signed from a script, see *Real testnet transactions*), a real 1Click deposit (only `dry` quotes were checked), and NEAR AI Cloud (no API key configured).
 
 ## Prior art
 

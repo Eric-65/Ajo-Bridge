@@ -7,6 +7,8 @@ A rotating savings circle (ajo / esusu / susu) on NEAR where nobody can run off 
 Built Nov 13–14, 2026 for **NEAR HACKATHON — Build Beyond Boundaries**.
 Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`) and **AI Security & Defense** (`security`).
 
+**Live demo:** https://ajo-bridge.vercel.app (no wallet needed: it opens in demo mode)
+
 **Contents:** [What it does](#what-it-does) · [The problem it solves](#the-problem-it-solves) · [How to run it](#how-to-run-it) · [Try it: do X, see Y](#try-it-do-x-see-y) · [Status](#status-what-was-run-and-what-was-not) · [How it works](#how-it-works) · [NEAR tech](#near-tech-used-and-where) · [Deploy](#deploy)
 
 ## What it does
@@ -59,7 +61,7 @@ Each row is one action and what you should see. Button names are written as they
 
 ### B. Web app in demo mode
 
-Start it with `cd web && npm install && npm run dev` and open `http://localhost:5173`. If you have used it before, press **Reset demo** in the grey banner first.
+Open https://ajo-bridge.vercel.app, or run it locally with `cd web && npm install && npm run dev` and open `http://localhost:5173`. If you have used it before, press **Reset demo** in the grey banner first.
 
 | # | Do | See |
 | --- | --- | --- |
@@ -98,7 +100,7 @@ Run `npm run setup` once first.
 | Alajo agent + `/api/alajo` | Written; rule-based answers tested, **NEAR AI Cloud and testnet calls not exercised** |
 | Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
 | Testnet deployment | **Not deployed yet** — no contract address. Run `contract/scripts/deploy.sh` |
-| Vercel deployment | **Not deployed yet** — no live URL. See [Deploy](#deploy) |
+| Hosted demo | https://ajo-bridge.vercel.app — runs in demo mode until the testnet contract is deployed |
 
 The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Cloud or Vercel, so everything that needs those is written from the official docs and marked above. Everything else was run and verified.
 
@@ -280,7 +282,7 @@ SMOKE_URL=https://your-app.vercel.app npm run smoke
 
 `npm run smoke` talks only to real services and exits non-zero if anything fails. `vercel build` was run locally on a fresh copy of the repository: it produces the static site plus four functions (`alajo`, `quote`, `status`, `tokens`).
 
-Deployed contract address: _not deployed yet_. Live URL: _not deployed yet_.
+Live URL: https://ajo-bridge.vercel.app. Deployed contract address: _not deployed yet_.
 
 ## Hackathon rules (answers to the HACKATHON.md FAQ)
 

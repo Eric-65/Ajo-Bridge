@@ -63,7 +63,7 @@ const wnear = tokens.find((t) => t.blockchain === 'near' && t.symbol === 'wNEAR'
 // The routes the pay drawer offers first, quoted exactly as the drawer quotes a preview.
 const ROUTES = [
   { chain: 'base', symbol: 'USDC', family: 'evm', usd: 20 },
-  { chain: 'tron', symbol: 'USDT', family: 'tron', usd: 100 }, // 1Click: temporary $100 minimum on this route (Nov 2026)
+  { chain: 'tron', symbol: 'USDT', family: 'tron', usd: 120 }, // 1Click: temporary $100 minimum after fees on this route (Nov 2026)
   { chain: 'sol', symbol: 'SOL', family: 'sol', usd: 20 },
 ];
 const headers = { 'Content-Type': 'application/json' };

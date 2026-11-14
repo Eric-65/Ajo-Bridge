@@ -186,7 +186,7 @@ export function PayDrawer({ circle, onClose }) {
               <div className="stack stack--sm" role="alert">
                 <p className="danger">No quote: {preview.message}</p>
                 {/minimum swap amount is \$?(\d+)/i.test(preview.message) ? (
-                  <p className="helper">1Click has a minimum of ${/minimum swap amount is \$?(\d+)/i.exec(preview.message)[1]} on this route right now. Raise the amount, or pick USDC on Base or SOL for smaller payments.</p>
+                  <p className="helper">1Click has a minimum of ${/minimum swap amount is \$?(\d+)/i.exec(preview.message)[1]} on this route right now, after fees, so enter a little more than that. For smaller payments pick USDC on Base or SOL.</p>
                 ) : null}
               </div>
             ) : null}

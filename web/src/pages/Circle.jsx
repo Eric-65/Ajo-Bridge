@@ -71,11 +71,31 @@ function VouchDrawer({ circle, member, onClose, onConfirm, busy }) {
   );
 }
 
+function ShareRow({ circle, openSlots, toast, lateList }) {
+  const link = `${window.location.origin}/c/${circle.id}`;
+  const invite = openSlots > 0
+    ? `Join my savings circle "${circle.name}" on Ajo Bridge: ${near(circle.contribution)} NEAR per round, ${openSlots} slot${openSlots === 1 ? '' : 's'} open. Nobody can run with the pot. ${link}`
+    : `Follow our savings circle "${circle.name}" on Ajo Bridge: ${link}`;
+  const remind = lateList.length
+    ? `Reminder for "${circle.name}", round ${circle.round}: ${lateList.map((a) => shortName(a)).join(', ')}, please pay ${near(circle.contribution)} NEAR. ${link}`
+    : null;
+  const copy = async () => {
+    try { await navigator.clipboard.writeText(link); toast('Invite link copied.'); } catch { toast(link); }
+  };
+  return (
+    <div className="share-row" style={{ marginTop: 'var(--s-3)' }}>
+      <Cta size="sm" className="cta--auto" href={`https://wa.me/?text=${encodeURIComponent(invite)}`} target="_blank" rel="noreferrer">Share on WhatsApp</Cta>
+      <Cta size="sm" variant="dark" className="cta--auto" onClick={copy}>Copy invite link</Cta>
+      {remind ? <Cta size="sm" variant="dark" className="cta--auto" href={`https://wa.me/?text=${encodeURIComponent(remind)}`} target="_blank" rel="noreferrer">Remind late members</Cta> : null}
+    </div>
+  );
+}
+
 export function CirclePage() {
   const { id } = useParams();
   const [search, setSearch] = useSearchParams();
   const { data: circle, error, loading } = useCircle(id);
-  const { account, act, mode, toast, lastEffects } = useApp();
+  const { account, act, mode, toast, lastEffects, walletAccount, connect, connecting } = useApp();
   const now = useNow();
   const [busy, setBusy] = useState(null);
   const [joinSlot, setJoinSlot] = useState(null);
@@ -103,6 +123,9 @@ export function CirclePage() {
   }, [effects?.id]); // eslint-disable-line react-hooks/exhaustive-deps
 
   const members = useMemo(() => (circle ? membersInSlotOrder(circle) : []), [circle]);
+  useEffect(() => {
+    if (circle && window.location.hash === '#slots') document.getElementById('slots')?.scrollIntoView({ block: 'start' });
+  }, [Boolean(circle)]); // eslint-disable-line react-hooks/exhaustive-deps
 
   if (error && !circle) {
     return <section className="section"><div className="wrap stack"><h1 className="display">Circle not found</h1><p className="danger">{String(error.message ?? error)}</p><Cta to="/circles" className="cta--auto">All circles</Cta></div></section>;
@@ -118,6 +141,7 @@ export function CirclePage() {
   const myVouches = members.filter((m) => m.vouches.some((v) => v.voucher === account && v.amount > 0n));
   const needBacking = circle.status === STATUS.OPEN ? members.filter((m) => collateralOf(m) < requiredCollateral(circle, m.slot)) : [];
   const iPaid = me && me.last_paid_round === circle.round;
+  const unpaidList = members.filter((m) => active && m.last_paid_round < circle.round && m.slot !== circle.round).map((m) => m.account);
 
   async function run(key, method, args = {}, deposit = 0n, done, plain = 'Done.') {
     if (busy) return;
@@ -127,7 +151,6 @@ export function CirclePage() {
       const paid = fx.events.find((e) => e.event === 'round_paid');
       const started = fx.events.find((e) => e.event === 'circle_started');
       toast(done ?? (paid ? `Round paid: ${near(paid.data.amount)} NEAR to ${shortName(paid.data.account)}.` : started ? 'All slots backed. The circle has started.' : plain));
-      if (fx.hash) toast(`Transaction ${fx.hash.slice(0, 8)}… on testnet`);
     } catch (e) {
       toast(e.message ?? String(e), 'error');
     } finally {
@@ -152,6 +175,7 @@ export function CirclePage() {
             </div>
             <Scramble as="h1" className="display" text={circle.name} />
             <p className="subtitle">{near(circle.contribution)} NEAR every {roundLength(circle.round_ns)} · {circle.n} members · {percent(circle.coverage_bps)} coverage · {percent(circle.order_fee_bps)} order fee</p>
+            <ShareRow circle={circle} openSlots={circle.slots.filter((x) => !x).length} toast={toast} lateList={active && pastDeadline ? unpaidList : []} />
             <div className="stack stack--sm" style={{ marginTop: 'var(--s-3)' }}>
               <p className="label">{circle.status === STATUS.OPEN ? `${members.length} of ${circle.n} slots taken` : active ? `Round ${circle.round} of ${circle.n}` : 'All rounds complete'}</p>
               <SegmentBar total={circle.n} current={circle.status === STATUS.OPEN ? members.length + 1 : circle.round} done={!active && circle.status !== STATUS.OPEN} />
@@ -185,7 +209,13 @@ export function CirclePage() {
         <div className="wrap stack stack--lg">
           {circle.status === STATUS.OPEN ? (
             <>
-              <p className="tab">Pick your payout slot</p>
+              <p className="tab" id="slots">Pick your payout slot</p>
+              {mode === 'testnet' && !walletAccount ? (
+                <div className="card card--dark"><div className="stack">
+                  <p className="subtitle" style={{ color: '#e6e6e6' }}>You are viewing live data. Connect a NEAR testnet wallet to take a slot.</p>
+                  <Cta onClick={connect} busy={connecting} className="cta--auto">Connect wallet</Cta>
+                </div></div>
+              ) : null}
               <SlotPicker circle={circle} account={account} busySlot={busy === 'join' ? joinSlot : null} onTake={setJoinSlot} />
               <p className="helper">Earlier slots lock more collateral and pay the order fee. Later slots lock less and earn it. The circle starts when every slot is taken and fully backed.</p>
               {needBacking.length ? (

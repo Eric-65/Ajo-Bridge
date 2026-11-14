@@ -5,35 +5,69 @@
  */
 import { deserializeCircle } from '@shared/ajoEngine.js';
 
-import { CONTRACT_ID, GAS, NETWORK, RPC_URL } from './config.js';
+import { CONTRACT_ID, GAS, GAS_RESERVE, NETWORK, RPC_URLS } from './config.js';
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
 
 const toBase64 = (bytes) => btoa(String.fromCharCode(...bytes));
 
+/** JSON-RPC call with fallback: tries each RPC in RPC_URLS until one answers. */
+async function rpc(method, params) {
+  let lastError;
+  for (const url of RPC_URLS) {
+    try {
+      const response = await fetch(url, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: 'ajo', method, params }),
+        signal: AbortSignal.timeout(10000),
+      });
+      if (!response.ok) throw new Error(`NEAR RPC ${new URL(url).host} answered ${response.status}`);
+      const body = await response.json();
+      if (body.error) {
+        const cause = body.error.cause?.name;
+        // UNKNOWN_ACCOUNT and contract panics are real answers: do not retry them elsewhere.
+        if (cause === 'UNKNOWN_ACCOUNT') return { unknownAccount: true };
+        throw new Error(body.error.data ?? body.error.message ?? 'RPC error');
+      }
+      return body.result;
+    } catch (error) {
+      lastError = error;
+    }
+  }
+  throw lastError ?? new Error('No NEAR RPC endpoint answered');
+}
+
 export async function view(method, args = {}) {
-  const response = await fetch(RPC_URL, {
-    method: 'POST',
-    headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({
-      jsonrpc: '2.0',
-      id: 'ajo',
-      method: 'query',
-      params: {
-        request_type: 'call_function',
-        finality: 'optimistic',
-        account_id: CONTRACT_ID,
-        method_name: method,
-        args_base64: toBase64(encoder.encode(JSON.stringify(args))),
-      },
-    }),
+  const result = await rpc('query', {
+    request_type: 'call_function',
+    finality: 'optimistic',
+    account_id: CONTRACT_ID,
+    method_name: method,
+    args_base64: toBase64(encoder.encode(JSON.stringify(args))),
   });
-  if (!response.ok) throw new Error(`NEAR RPC answered ${response.status}`);
-  const body = await response.json();
-  if (body.error) throw new Error(body.error.data ?? body.error.message ?? 'RPC error');
-  if (body.result?.error) throw new Error(cleanPanic(body.result.error));
-  return JSON.parse(decoder.decode(Uint8Array.from(body.result.result)));
+  if (result?.error) throw new Error(cleanPanic(result.error));
+  return JSON.parse(decoder.decode(Uint8Array.from(result.result)));
+}
+
+/** Account state on testnet: { exists, balance } (balance = available yoctoNEAR). */
+export async function accountInfo(accountId) {
+  const result = await rpc('query', { request_type: 'view_account', finality: 'final', account_id: accountId });
+  if (!result || result.unknownAccount) return { exists: false, balance: 0n };
+  return { exists: true, balance: BigInt(result.amount ?? 0) };
+}
+
+export const isTestnetAccount = (id) => /\.testnet$/.test(id ?? '') || /^[0-9a-f]{64}$/.test(id ?? '');
+
+/** Turn wallet and RPC failures into one plain sentence. */
+export function friendlyError(error) {
+  const text = cleanPanic(error?.message ?? String(error));
+  if (/reject|denied|cancel|closed|user.*abort/i.test(text)) return 'You rejected the transaction in your wallet. Nothing was sent.';
+  if (/NotEnoughBalance|LackBalanceForState|not enough balance|insufficient/i.test(text)) return 'Not enough testnet NEAR in your wallet for this deposit plus gas. Get free testnet NEAR from a faucet and try again.';
+  if (/already taken/i.test(text)) return `${text}. Pick another open slot.`;
+  if (/joining is closed|already started/i.test(text)) return 'This circle has already started, so it no longer accepts members.';
+  return text;
 }
 
 /** "Smart contract panicked: attach at least…\n at fail (…)" → "attach at least…" */
@@ -127,6 +161,14 @@ export const chain = {
 
   /** Sign and send one function call with the connected wallet. */
   async act(method, args = {}, deposit = 0n) {
+    if (!walletAccount) throw new Error('Connect your wallet to sign this transaction.');
+    if (!isTestnetAccount(walletAccount)) {
+      throw new Error(`${walletAccount} is a mainnet account. Ajo Bridge runs on NEAR testnet: switch your wallet to testnet (an account ending in .testnet) and reconnect.`);
+    }
+    const info = await accountInfo(walletAccount).catch(() => null);
+    if (info && (!info.exists || info.balance < BigInt(deposit) + GAS_RESERVE)) {
+      throw new Error('Not enough testnet NEAR in your wallet for this deposit plus gas. Get free testnet NEAR from a faucet and try again.');
+    }
     const c = await connector();
     const w = await c.wallet();
     let outcome;
@@ -136,10 +178,10 @@ export const chain = {
         actions: [{ type: 'FunctionCall', params: { methodName: method, args, gas: GAS, deposit: deposit.toString() } }],
       });
     } catch (error) {
-      throw new Error(cleanPanic(error?.message ?? String(error)));
+      throw new Error(friendlyError(error));
     }
     const failure = outcome?.status?.Failure;
-    if (failure) throw new Error(cleanPanic(failure));
+    if (failure) throw new Error(friendlyError({ message: JSON.stringify(failure) }));
     let value = null;
     const success = outcome?.status?.SuccessValue;
     if (success) {

@@ -10,7 +10,8 @@ import { SlotPicker } from '../components/SlotPicker.jsx';
 import { Ticker } from '../components/Ticker.jsx';
 import { Accordion, Cta, Eyebrow, HighlightHeading, Hl, Scramble, SegmentBar, Skeleton, Stat } from '../components/ui.jsx';
 import { near, percent, roundLength } from '../lib/format.js';
-import { useApp, useCircle, useCircles } from '../lib/store.jsx';
+import { circleStats } from '../lib/stats.js';
+import { useAllCircles, useApp, useCircle, useCircles } from '../lib/store.jsx';
 
 const HERO_MEMBERS = ['A', 'B', 'C', 'D', 'E', 'F'].map((label) => ({ label, state: 'due' }));
 const EXAMPLE = { n: 5, contribution: parseNear('20'), coverageBps: 10000, orderFeeBps: 100 };
@@ -31,6 +32,30 @@ function OpenCircle({ summary }) {
       <SlotPicker circle={circle} account={account} onTake={() => navigate(`/circle/${circle.id}`, { viewTransition: true })} limit={4} />
       <p className="helper">Leave any time before the circle starts and everything is refunded.</p>
     </div>
+  );
+}
+
+function LiveStats() {
+  const { mode } = useApp();
+  const { data: circles, error } = useAllCircles();
+  const stats = circleStats(circles ?? []);
+  return (
+    <section className="section section--tight on-soft" aria-labelledby="live-stats">
+      <div className="wrap stack">
+        <p className="label" id="live-stats">{mode === 'testnet' ? 'Live on NEAR testnet · read from the contract' : 'Demo data'}</p>
+        {error ? <p className="danger">Could not read the contract right now.</p> : null}
+        {circles && stats.circles === 0 ? (
+          <div className="row row--between"><p className="title">No circles yet — start the first one.</p><Cta to="/create" className="cta--auto">Start a circle</Cta></div>
+        ) : (
+          <div className="stats">
+            <Stat label="Circles" value={stats.circles} note="Created on the contract" />
+            <Stat label="Members" value={stats.members} note="Slots taken across circles" />
+            <Stat label="NEAR locked" value={Number(stats.locked / 10n ** 21n) / 1000} format={(n) => n.toFixed(n % 1 ? 2 : 0)} unit="NEAR" note="Collateral plus open pots" />
+            <Stat label="Rounds paid" value={stats.roundsPaid} note={`${(Number(stats.paidOut / 10n ** 21n) / 1000).toFixed(2)} NEAR paid out`} />
+          </div>
+        )}
+      </div>
+    </section>
   );
 }
 
@@ -120,6 +145,8 @@ export function LandingPage() {
       </section>
 
       <Ticker entries={activeCircle?.history?.slice(-14).reverse() ?? []} />
+
+      <LiveStats />
 
       <section className="section section--tight">
         <div className="wrap split">

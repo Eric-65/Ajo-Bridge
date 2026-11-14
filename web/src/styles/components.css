@@ -766,3 +766,24 @@
 @keyframes photo-in { from { opacity: 0; transform: scale(1.06); } to { opacity: 1; transform: scale(1); } }
 .panel--wide { min-height: clamp(34rem, 90vh, 46rem); }
 @media (min-width: 56rem) { .panel--wide .panel__copy { max-width: 46rem; margin-left: max(var(--gutter), calc((100vw - var(--page)) / 2 + var(--gutter))); } }
+
+/* ------------------------------------------------------------ live / demo mode */
+.mode-dot { width: 0.85rem; height: 0.85rem; border-radius: 50%; background: var(--grey); box-shadow: 0 0 0 2px var(--line-dark); flex: none; }
+.mode-dot[data-live='true'] { background: var(--mint); }
+.wallet ~ .mode-dot, .header__right:has(.wallet) .mode-dot { display: none; }
+.banner--live { background: var(--ink); color: #d6d6d6; }
+.banner--live button { color: var(--mint); }
+.banner__note { font-weight: 500; text-transform: none; letter-spacing: var(--tight); }
+.modetag { display: inline-flex; align-items: center; gap: 0.45rem; padding: 0.2rem 0.5rem; font-size: 0.6875rem; font-weight: 700; text-transform: uppercase; }
+.modetag--live { background: var(--black); color: var(--mint); box-shadow: inset 0 0 0 1.5px var(--mint); }
+.modetag--live i { width: 0.5rem; height: 0.5rem; border-radius: 50%; background: var(--mint); animation: pulse 1.6s var(--ease-in-out) infinite; }
+.steps-list { list-style: decimal; padding-left: 1.2rem; display: grid; gap: 0.6rem; color: #e6e6e6; font-size: var(--text-sm); }
+.steps-list a, .toast a { color: var(--mint); text-decoration: underline; text-underline-offset: 3px; }
+.filters { display: flex; gap: 0.4rem; flex-wrap: wrap; }
+.filter { padding: 0.45rem 0.8rem; min-height: 2.5rem; font-family: var(--font-display); font-weight: 700; font-size: 0.8125rem; text-transform: uppercase; background: var(--panel); }
+.filter[aria-pressed='true'] { background: var(--ink); color: var(--mint); }
+.card-facts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 0.4rem 1rem; }
+@container (min-width: 34rem) { .card-facts { grid-template-columns: repeat(4, minmax(0, 1fr)); } }
+.card-facts dt { font-size: var(--text-xs); color: var(--grey); text-transform: uppercase; font-weight: 600; }
+.card-facts dd { font-family: var(--font-display); font-weight: 600; font-variant-numeric: tabular-nums; }
+.share-row { display: flex; gap: 0.5rem; flex-wrap: wrap; }

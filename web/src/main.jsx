@@ -16,6 +16,8 @@ import { CirclePage } from './pages/Circle.jsx';
 import { CirclesPage } from './pages/Circles.jsx';
 import { CreatePage } from './pages/Create.jsx';
 import { LandingPage } from './pages/Landing.jsx';
+import { MinePage } from './pages/Mine.jsx';
+import { ShareRedirect } from './pages/ShareRedirect.jsx';
 import { NotFoundPage } from './pages/NotFound.jsx';
 import { SimulatorPage } from './pages/Simulator.jsx';
 
@@ -27,6 +29,8 @@ const router = createBrowserRouter([
       { path: '/circles', element: <CirclesPage /> },
       { path: '/create', element: <CreatePage /> },
       { path: '/circle/:id', element: <CirclePage /> },
+      { path: '/c/:id', element: <ShareRedirect /> },
+      { path: '/mine', element: <MinePage /> },
       { path: '/simulator', element: <SimulatorPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],

@@ -5,10 +5,11 @@ import { PERSONAS, demo } from '../lib/demoStore.js';
 import { shortName } from '../lib/format.js';
 import { useApp } from '../lib/store.jsx';
 import { installRevealFallback } from '../motion/reveal.js';
-import { Cta } from './ui.jsx';
+import { Cta, Drawer } from './ui.jsx';
 
 const NAV = [
   { to: '/circles', label: 'Circles' },
+  { to: '/mine', label: 'My circles' },
   { to: '/create', label: 'Start a circle' },
   { to: '/simulator', label: 'Walk-away test' },
 ];
@@ -65,6 +66,12 @@ function WalletButton() {
   );
 }
 
+function ModeDot() {
+  const { mode } = useApp();
+  const live = mode === 'testnet';
+  return <span className="mode-dot" data-live={live} role="img" aria-label={live ? 'Live on NEAR testnet' : 'Demo mode'} title={live ? 'Live · NEAR testnet' : 'Demo mode'} />;
+}
+
 function Header() {
   const { walletAccount, connect, disconnect, connecting } = useApp();
   const [open, setOpen] = useState(false);
@@ -84,6 +91,7 @@ function Header() {
             <nav className="header__nav" aria-label="Main">
               {NAV.map((item) => <NavLink key={item.to} to={item.to} viewTransition>{item.label}</NavLink>)}
             </nav>
+            <ModeDot />
             <WalletButton />
             <button type="button" className="burger" aria-expanded={open} aria-controls="menu" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen(!open)}>
               <span /><span />
@@ -106,19 +114,51 @@ function Header() {
   );
 }
 
-function DemoBanner() {
-  const { mode, account, toast, walletAccount } = useApp();
-  if (mode !== 'demo') return null;
+function ModeBar() {
+  const { mode, account, toast, walletAccount, rpcDown, tryDemo, goLive } = useApp();
+  if (mode === 'testnet') {
+    return (
+      <div className="banner banner--live" role="region" aria-label="Network">
+        <span className="modetag modetag--live"><i aria-hidden="true" />Live · NEAR testnet</span>
+        <span className="banner__note">{walletAccount ? `Signed in as ${shortName(walletAccount)}` : 'Read-only until you connect a wallet'}</span>
+        <button type="button" onClick={tryDemo}>Try the demo</button>
+      </div>
+    );
+  }
   return (
     <div className="banner" role="region" aria-label="Demo mode">
-      <span className="tag tag--demo">Demo data</span>
-      {walletAccount ? <span>Wallet connected · contract not deployed yet</span> : null}
+      <span className="tag tag--demo">Demo</span>
+      {rpcDown ? <span className="banner__note danger">The NEAR testnet RPC is not answering, so you are seeing demo data.</span> : null}
       <label htmlFor="persona">Acting as</label>
       <select id="persona" value={account} onChange={(event) => demo.setPersona(event.target.value)}>
         {PERSONAS.map((p) => <option key={p} value={p}>{p}</option>)}
       </select>
       <button type="button" onClick={() => { demo.reset(); toast('Demo circles reset.'); }}>Reset demo</button>
+      {!rpcDown ? <button type="button" onClick={goLive}>Back to live</button> : null}
     </div>
+  );
+}
+
+function Onboarding() {
+  const { onboarding, closeOnboarding, disconnect } = useApp();
+  if (!onboarding) return null;
+  const { reason, account } = onboarding;
+  return (
+    <Drawer title={reason === 'mainnet' ? 'Switch to testnet' : 'Get free testnet NEAR'} onClose={closeOnboarding} labelledBy="onboarding-title">
+      {reason === 'mainnet' ? (
+        <p className="subtitle" style={{ color: '#e6e6e6' }}><b>{account}</b> is a mainnet account. Ajo Bridge runs on NEAR <b>testnet</b>, so you need an account ending in <b>.testnet</b>.</p>
+      ) : (
+        <p className="subtitle" style={{ color: '#e6e6e6' }}>{reason === 'missing' ? `${account} does not exist on testnet yet.` : `${account} has less than 1 testnet NEAR.`} You need a little to lock collateral and pay gas.</p>
+      )}
+      <ol className="steps-list">
+        <li>In Meteor Wallet, open the menu and switch the network to <b>Testnet</b>.</li>
+        <li>Create a testnet account (it ends in <b>.testnet</b>). It is free.</li>
+        <li>Get free testnet NEAR from the faucet at <a href="https://near-faucet.io" target="_blank" rel="noreferrer">near-faucet.io</a>, or Meteor&apos;s own testnet faucet if it offers one.</li>
+        <li>Come back, tap <b>Connect wallet</b> and pick your .testnet account.</li>
+      </ol>
+      <p className="helper">Testnet NEAR has no real value. Nothing on testnet costs real money.</p>
+      {reason === 'mainnet' ? <Cta onClick={() => { closeOnboarding(); disconnect(); }}>Disconnect and switch</Cta> : <Cta onClick={closeOnboarding}>Got it</Cta>}
+    </Drawer>
   );
 }
 
@@ -126,7 +166,11 @@ function Toasts() {
   const { toasts } = useApp();
   return (
     <div className="toasts" role="status" aria-live="polite">
-      {toasts.map((t) => <p key={t.id} className="toast" data-kind={t.kind}>{t.text}</p>)}
+      {toasts.map((t) => (
+        <p key={t.id} className="toast" data-kind={t.kind}>
+          {t.text}{t.href ? <> <a href={t.href} target="_blank" rel="noreferrer">View transaction</a></> : null}
+        </p>
+      ))}
     </div>
   );
 }
@@ -163,12 +207,13 @@ export function Layout() {
     <>
       <a className="skip-link" href="#main">Skip to content</a>
       <Header />
-      <DemoBanner />
+      <ModeBar />
       <main id="main">
         <Outlet />
       </main>
       <Footer />
       <Toasts />
+      <Onboarding />
       <ScrollRestoration />
     </>
   );

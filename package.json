@@ -17,6 +17,7 @@
     "demo": "node scripts/demo.js",
     "dev": "npm --prefix web run dev",
     "build": "npm --prefix web run build",
-    "agent": "node agent/alajo.js"
+    "agent": "node agent/alajo.js",
+    "smoke": "node scripts/smoke.js"
   }
 }

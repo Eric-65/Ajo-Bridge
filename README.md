@@ -1,5 +1,7 @@
 # Ajo Bridge
 
+[![CI](https://github.com/Eric-65/Ajo-Bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/Eric-65/Ajo-Bridge/actions/workflows/ci.yml)
+
 A rotating savings circle (ajo / esusu / susu) on NEAR where nobody can run off with the money — not the collector, and not the member who gets paid first — and anyone, anywhere can contribute from any chain via NEAR Intents.
 
 Built Nov 13–14, 2026 for **NEAR HACKATHON — Build Beyond Boundaries**.
@@ -14,6 +16,7 @@ Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`)
 | Web app (demo mode: every screen works with no wallet) | Done |
 | Pay-from-any-chain (1Click proxy + drawer) | Written, **not exercised against the live API** |
 | Alajo agent + `/api/alajo` | Written; rule-based answers tested, **NEAR AI Cloud and testnet calls not exercised** |
+| Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
 | Testnet deployment | **Not deployed yet** — no contract address. Run `contract/scripts/deploy.sh` |
 | Vercel deployment | **Not deployed yet** — no live URL. See [Deploy](#deploy) |
 
@@ -227,10 +230,16 @@ PARENT=you.testnet ./contract/scripts/deploy.sh
 # 2. The agent's restricted key (prints the key pair once; put the private key in .env)
 ALAJO_ACCOUNT_ID=alajo.you.testnet AJO_CONTRACT_ID=ajobridge.you.testnet ./agent/setup-key.sh
 
-# 3. Web + API on Vercel (root directory = repository root; vercel.json sets the build)
-#    Environment variables: VITE_AJO_CONTRACT_ID, NEAR_AI_API_KEY (optional), ONECLICK_JWT (optional)
+# 3. Web + API on Vercel. Root Directory = repository root (blank); vercel.json sets install and build.
+#    Environment variables: VITE_AJO_CONTRACT_ID (read at build time: redeploy after setting it),
+#    NEAR_AI_API_KEY (optional), ONECLICK_JWT (optional)
 vercel --prod
+
+# 4. Check every live dependency from your machine (1Click, testnet contract, NEAR AI Cloud, the site)
+SMOKE_URL=https://your-app.vercel.app npm run smoke
 ```
+
+`npm run smoke` talks only to real services and exits non-zero if anything fails. `vercel build` was run locally on a fresh copy of the repository: it produces the static site plus four functions (`alajo`, `quote`, `status`, `tokens`).
 
 Deployed contract address: _not deployed yet_. Live URL: _not deployed yet_.
 
@@ -238,7 +247,8 @@ Deployed contract address: _not deployed yet_. Live URL: _not deployed yet_.
 
 ```
 shared/     ajoMath.js, ajoEngine.js, simulate.js, alajo.js, units.js + node:test tests
-scripts/    demo.js — offline walk-away simulation
+scripts/    demo.js (offline walk-away simulation), smoke.js (live checks after deploying)
+tests/      API tests (kept out of api/ so Vercel does not deploy them as functions)
 contract/   near-sdk-js contract, sandbox tests (near-workspaces + ava), deploy script
 web/        Vite + React app
   src/styles/   tokens.css, base.css, components.css, motion.css (hand-written CSS)

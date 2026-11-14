@@ -18,7 +18,7 @@ permissions:
 jobs:
   smoke:
     runs-on: ubuntu-latest
-    timeout-minutes: 5
+    timeout-minutes: 10
     steps:
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
@@ -28,3 +28,11 @@ jobs:
           SMOKE_URL: ${{ inputs.site }}
           NEAR_RPC_URL: https://rpc.testnet.near.org
         run: npm run smoke
+      - name: Real browser on the hosted site (LIVE mode, chain reads)
+        if: always()
+        env:
+          SITE: ${{ inputs.site }}
+        run: |
+          npm install --no-save playwright@1
+          npx playwright install --with-deps chromium
+          node scripts/check-live-site.mjs

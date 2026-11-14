@@ -7,7 +7,87 @@ A rotating savings circle (ajo / esusu / susu) on NEAR where nobody can run off 
 Built Nov 13–14, 2026 for **NEAR HACKATHON — Build Beyond Boundaries**.
 Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`) and **AI Security & Defense** (`security`).
 
-## Status at a glance
+**Contents:** [What it does](#what-it-does) · [The problem it solves](#the-problem-it-solves) · [How to run it](#how-to-run-it) · [Try it: do X, see Y](#try-it-do-x-see-y) · [Status](#status-what-was-run-and-what-was-not) · [How it works](#how-it-works) · [NEAR tech](#near-tech-used-and-where) · [Deploy](#deploy)
+
+## What it does
+
+A savings circle is a group that pays into a pot every round and takes turns collecting it. Ajo Bridge runs that circle in a NEAR smart contract:
+
+- **A contract holds the money, not a person.** It has no withdraw function. Money leaves only as a payout to the round's recipient, a refund of your own deposit, a debt repayment, or a fee share.
+- **Early payout slots lock collateral.** To be paid in round `k` of `n` you lock what you will still owe afterwards. If you stop paying, the contract pays the group from that lock.
+- **A backer can vouch.** Someone else (for example family abroad) can put up part of a member's collateral. The backer's stake is slashed first.
+- **Waiting is paid.** Members who collect early pay a small order fee; members who wait longer share it.
+- **Pay from any chain.** A NEAR Intents 1Click quote lets a member pay with USDC on Base, USDT on Tron, SOL and more.
+- **An AI coordinator, Alajo, without access to funds.** It answers questions about the circle in English, Pidgin and Yoruba, posts reminders, and settles late rounds using a key that cannot move money.
+
+The guarantee, which the tests prove: at 100% coverage, a member who collects the pot and walks away ends with a net loss, and every other member still receives a full pot.
+
+## The problem it solves
+
+- **Collectors disappear with the pot.** In a traditional ajo one person (the *alajo*) holds everyone's money.
+- **Early recipients stop paying.** The classic ROSCA failure: a member collects their payout early, then stops contributing. A flat deposit covers one missed payment, not the whole remaining debt.
+- **The payout order is a hidden loan.** Early slots get interest-free credit; late slots fund it and earn nothing.
+- **Diaspora members cannot easily pay in.** People hold USDC on Base or Solana, or USDT on Tron — not one token on one chain.
+
+## How to run it
+
+Requires Node.js 22 or newer. The contract tests need Linux or macOS (near-sdk-js does not build on Windows; use WSL). No wallet, key or account is needed for anything in this section.
+
+| Goal | Command | Time |
+| --- | --- | --- |
+| See the guarantee in a terminal, no install | `npm run demo` | 1 second |
+| Run the unit tests, no install | `npm run test:math` | 2 seconds |
+| Run the web app in demo mode | `cd web && npm install && npm run dev`, then open `http://localhost:5173` | 1 minute |
+| Install everything (contract toolchain, web, agent) | `npm run setup` | 2–3 minutes |
+| Run the contract tests on a local NEAR sandbox | `npm run test:contract` (after `npm run setup`) | about 5 minutes |
+| Run every test | `npm test` (after `npm run setup`) | about 5 minutes |
+
+The web app starts in **demo mode**: seeded circles run in the browser on the same rules code the contract uses, so every screen works offline. Deploying your own contract and connecting a wallet is covered in [Deploy](#deploy).
+
+## Try it: do X, see Y
+
+Each row is one action and what you should see. Button names are written as they appear on screen.
+
+### A. Terminal, no install
+
+| # | Do | See |
+| --- | --- | --- |
+| 1 | Run `npm run test:math` | `# pass 43` and `# fail 0`. Includes the walk-away invariant for every circle size from 2 to 8 and every slot, plus 5,000 random default patterns. |
+| 2 | Run `npm run demo` | A round-by-round replay of 5 members at 20 NEAR. Ends with `✓ INVARIANT HOLDS: walking away earned nothing and every other member was made whole.` The ledger row for `ada` (who walked) shows net `-0.80`. |
+| 3 | Run `node scripts/demo.js --coverage 5000` | `✗ The group was left short.` `ada` has net `+39.20` and two members are `left short 20.00`. This is why strangers should use 100% coverage. |
+| 4 | Run `node scripts/demo.js --vouch 40` | `uncle.london` is slashed for the first two missed rounds before `ada`'s own collateral is touched. |
+
+### B. Web app in demo mode
+
+Start it with `cd web && npm install && npm run dev` and open `http://localhost:5173`. If you have used it before, press **Reset demo** in the grey banner first.
+
+| # | Do | See |
+| --- | --- | --- |
+| 5 | Open the home page | A grey status dot and a striped **DEMO DATA** badge. In the ring, coins travel from six members into the pot, then the pot flows to one member; the recipient changes each loop. |
+| 6 | Open **Circles**, then **Balogun Market Traders** | Round 2 of 5. The pot shows 60. `bayo` is marked **COLLECTS**. `ada` is marked **TO PAY** and **PAID OUT**: she was paid in round 1 and has not paid round 2. You are acting as `you.demo`, slot 5. |
+| 7 | Press **› CONTRIBUTE** | A mint coin travels into the pot, the pot shows 80, and the button becomes **✓ PAID FOR ROUND 2**. |
+| 8 | Press **Demo only: skip to the deadline**, then **› SETTLE ROUND NOW** | A red flash: `ada` is slashed 20 NEAR and gains a **MISSED 1** tag. A message reads `Round paid: 99.40 NEAR to bayo.` The page moves to round 3 of 5. |
+| 9 | Press **› ASK ALAJO**, then **Who hasn't paid?** | An answer naming the members who still owe round 3 and who collects. Tap **Pidgin** or **Yorùbá** and ask again to get the answer in that language. Each answer is labelled with its source (built-in rules, or NEAR AI Cloud when a key is configured). |
+| 10 | Close the drawer. Open **Circles**, then **Lagos to London Family**. Press **› TAKE SLOT 2**, then **› LOCK 20 NEAR** | Slot 2 turns grey and reads **✓ YOURS**. A card shows that `funke` (slot 1) still needs 27 NEAR of collateral. |
+| 11 | In the grey banner set **Acting as** to `uncle.london`. Press **› VOUCH FOR FUNKE**, then **› VOUCH 27 NEAR** | The message `You are backing funke.` Funke's row shows `30 / 30` collateral, vouched by `uncle`. |
+| 12 | Set **Acting as** to `ada.demo`. Press **› TAKE SLOT 4**, then **› LOCK 10 NEAR** | All four slots are now taken and backed, so the circle starts by itself: the tag changes to **RUNNING** and the page shows round 1 of 4. |
+| 13 | Open **Walk-away test** and press **› AUTO-PLAY** (or step with the mint button) | Five rounds play. From round 2, `ada`'s red collateral bar shrinks by 20 each round while every recipient is still paid in full. The verdict reads `ADA WALKED AWAY WITH -0.80 NEAR. EVERYONE ELSE WAS MADE WHOLE.` |
+| 14 | On the same page choose **Friends · 50%** and play again | The verdict changes to `ADA GAINED +39.20. THE GROUP IS SHORT 40 NEAR.` |
+| 15 | Open **Start a circle**. Switch between **Strangers · 100%** and **Friends · 50%**, and move the order-fee slider | The collateral bars animate: 80 / 60 / 40 / 20 / 20 for strangers, 40 / 30 / 20 / 20 / 20 for friends. |
+| 16 | Type a name and press **› CREATE CIRCLE** | You land on the new circle's page with the tag **FILLING: PICK A SLOT** and five open slots. |
+| 17 | On a running circle press **› PAY FROM ANY CHAIN** | A drawer with **MAINNET** and **TESTNET** labels. If the 1Click API is reachable you see a live quote for USDC on Base; if not, the drawer says quotes are unavailable. It never shows a made-up quote. |
+
+### C. Contract on a local NEAR sandbox
+
+Run `npm run setup` once first.
+
+| # | Do | See |
+| --- | --- | --- |
+| 18 | Run `npm run test:contract` | `10 tests passed` after about 5 minutes. |
+| 19 | Read the test names in the output | `INVARIANT on chain: slot 1 collects the pot and walks away — no gain, nobody else loses` (checked on real account balances). `the Alajo agent: notes only, with a function-call key that cannot move money` (NEAR rejects `contribute`, attached deposits and transfers signed with the agent's key). `custody: there is no way to pull money out of a circle`. `gas and storage: a full 12-member circle where nobody ever pays stays within limits` (heaviest call about 47 Tgas of the 300 Tgas limit). |
+| 20 | Open the **CI** badge at the top of this page | The same three jobs (unit tests, contract sandbox tests, web build) passing on GitHub's machines. |
+
+## Status: what was run and what was not
 
 | Thing | State |
 | --- | --- |
@@ -22,14 +102,21 @@ Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`)
 
 The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Cloud or Vercel, so everything that needs those is written from the official docs and marked above. Everything else was run and verified.
 
-## The problem
+## What is real and what is simulated
 
-- **Collectors disappear with the pot.** In a traditional ajo one person (the *alajo*) holds everyone's money.
-- **Early recipients stop paying.** The classic ROSCA failure: a member collects their payout early, then stops contributing. A flat deposit covers one missed payment, not the whole remaining debt.
-- **The payout order is a hidden loan.** Early slots get interest-free credit; late slots fund it and earn nothing.
-- **Diaspora members cannot easily pay in.** People hold USDC on Base or Solana, or USDT on Tron — not one token on one chain.
+| Part | Network | Real or simulated |
+| --- | --- | --- |
+| Circle rules (`shared/ajoEngine.js`) | — | Real code, shared by contract, tests and UI |
+| Contract | NEAR **testnet** | Real contract; **not deployed yet**, verified on the local NEAR sandbox |
+| Web app with a wallet connected | NEAR **testnet** | Real view calls and signed transactions (needs the deployed contract) |
+| Web app without a wallet (**DEMO DATA** badge) | none | Simulated: seeded circles run locally on the same engine. The demo clock can be skipped forward |
+| Pay-from-any-chain quotes and deposits | **mainnet** (NEAR Intents 1Click) | Real quotes and real funds when the API is reachable. Never mocked: if the API is down the drawer says so |
+| What a 1Click payment does | **mainnet** | Delivers wNEAR to the payer's mainnet account. It does **not** pay the testnet round automatically |
+| Alajo answers | — | From real circle state. Phrased by NEAR AI Cloud when `NEAR_AI_API_KEY` is set; otherwise by built-in templates, labelled as such |
+| Alajo settling rounds / posting notes | NEAR **testnet** | Real transactions with a function-call key (needs the deployed contract) |
+| Hero imagery | — | Generated in the browser (halftone canvas). No photographs |
 
-## What it does
+## How it works
 
 `n` members, contribution `C` per round, one payout per round. The member in slot `k` is paid in round `k`.
 
@@ -66,54 +153,6 @@ Fuzzing the engine with random default patterns showed the headline formulas alo
 **Invariant (tested):** with `coverageBps = 10000`, a member who walks away after their payout never ends up with a net gain, and no other member is worse off than in a circle where everybody paid.
 
 With a voucher, the *voucher* takes the loss in the walker's place — that is what vouching means — so the tested statement is that the walker and their vouchers together never gain. With coverage below 100% ("friends" mode) the group can be left short; the simulator shows by exactly how much.
-
-## Try it
-
-Requires Node.js 22 or newer on Linux or macOS (near-sdk-js does not build on Windows; use WSL).
-
-### A. No install — math, engine and the terminal demo
-
-1. Run `npm run test:math` → see `# pass 43`, `# fail 0`. This includes the walk-away invariant for every `n` from 2 to 8 and every slot, plus 5,000 random default patterns.
-2. Run `npm run demo` → see a round-by-round replay ending with `✓ INVARIANT HOLDS: walking away earned nothing and every other member was made whole.` and a ledger where `ada` (the walker) has net `-0.80`.
-3. Run `node scripts/demo.js --coverage 5000` → see `✗ The group was left short`, the walker's net `+39.20` and two members `left short 20.00`.
-4. Run `node scripts/demo.js --vouch 40` → see `uncle.london` slashed for the first two missed rounds before the walker's own collateral is touched.
-
-Other demo options: `--n 6`, `--walker 2`, `--fee 250`, `--contribution 50`.
-
-### B. The web app in demo mode (no wallet, no keys)
-
-5. Run `npm run setup` once, then `npm run dev`, and open `http://localhost:5173`. → A grey status dot and a striped **DEMO DATA** badge show you are on local data.
-6. On the landing page, watch the ring: coins travel from six members into the pot, then the pot flows to one member. → The recipient changes every loop.
-7. Open **Circles → Balogun Market Traders**. You are acting as `you.demo` (slot 5). Press **› CONTRIBUTE**. → A mint coin travels into the pot and the pot shows 80.
-8. Press **Demo only: skip to the deadline**, then **› SETTLE ROUND NOW**. → `ada`, who was already paid in round 1 and has not paid round 2, is slashed 20 NEAR (red flash), `bayo` is paid 99.40, and the page moves to round 3.
-9. Press **› ASK ALAJO**, then **Who hasn't paid?** → An answer naming the members who still owe this round. Switch to **Pidgin** or **Yorùbá** and ask again.
-10. Open **Circles → Lagos to London Family**. Press **› TAKE SLOT 2**, then **Lock 20 NEAR**. → The slot turns grey with **✓ YOURS**.
-11. Change **Acting as** to `uncle.london` and press **› VOUCH FOR FUNKE**. → Funke's collateral is complete. Take the last slot as any other persona → the tag changes to **RUNNING**.
-12. Open **Walk-away test** and keep pressing the mint button (**› START ROUND 1**, **› PLAY ROUND 2** … **› SEE THE LEDGER**), or press **› AUTO-PLAY**. → The verdict reads `ADA WALKED AWAY WITH -0.80 NEAR. EVERYONE ELSE WAS MADE WHOLE.` Switch to **Friends · 50%** and replay → the verdict turns to a gain of `+39.20` and a 40 NEAR shortfall.
-13. Open **Start a circle** and move the order-fee slider or switch coverage. → The collateral bars animate to the new values.
-
-### C. The contract on a local NEAR sandbox (about 4 minutes)
-
-14. Run `npm run test:contract` → see `10 tests passed`, including:
-    - `INVARIANT on chain: slot 1 collects the pot and walks away — no gain, nobody else loses` (checked on real account balances),
-    - `the Alajo agent: notes only, with a function-call key that cannot move money` (the protocol rejects `contribute`, attached deposits and transfers signed with the agent's key),
-    - `custody: there is no way to pull money out of a circle`,
-    - `gas and storage: a full 12-member circle where nobody ever pays stays within limits` (heaviest call about 47 Tgas of the 300 Tgas limit).
-15. Run `npm test` → runs A and C together.
-
-## What is real and what is simulated
-
-| Part | Network | Real or simulated |
-| --- | --- | --- |
-| Circle rules (`shared/ajoEngine.js`) | — | Real code, shared by contract, tests and UI |
-| Contract | NEAR **testnet** | Real contract; **not deployed yet**, verified on the local NEAR sandbox |
-| Web app with a wallet connected | NEAR **testnet** | Real view calls and signed transactions (needs the deployed contract) |
-| Web app without a wallet (**DEMO DATA** badge) | none | Simulated: seeded circles run locally on the same engine. The demo clock can be skipped forward |
-| Pay-from-any-chain quotes and deposits | **mainnet** (NEAR Intents 1Click) | Real quotes and real funds when the API is reachable. Never mocked: if the API is down the drawer says so |
-| What a 1Click payment does | **mainnet** | Delivers wNEAR to the payer's mainnet account. It does **not** pay the testnet round automatically |
-| Alajo answers | — | From real circle state. Phrased by NEAR AI Cloud when `NEAR_AI_API_KEY` is set; otherwise by built-in templates, labelled as such |
-| Alajo settling rounds / posting notes | NEAR **testnet** | Real transactions with a function-call key (needs the deployed contract) |
-| Hero imagery | — | Generated in the browser (halftone canvas). No photographs |
 
 ## NEAR tech used, and where
 

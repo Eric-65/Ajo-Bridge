@@ -62,18 +62,18 @@ try {
 const wnear = tokens.find((t) => t.blockchain === 'near' && t.symbol === 'wNEAR');
 // The routes the pay drawer offers first, quoted exactly as the drawer quotes a preview.
 const ROUTES = [
-  { chain: 'base', symbol: 'USDC', family: 'evm' },
-  { chain: 'tron', symbol: 'USDT', family: 'tron' },
-  { chain: 'sol', symbol: 'SOL', family: 'sol' },
+  { chain: 'base', symbol: 'USDC', family: 'evm', usd: 20 },
+  { chain: 'tron', symbol: 'USDT', family: 'tron', usd: 100 }, // 1Click: temporary $100 minimum on this route (Nov 2026)
+  { chain: 'sol', symbol: 'SOL', family: 'sol', usd: 20 },
 ];
 const headers = { 'Content-Type': 'application/json' };
 if (process.env.ONECLICK_JWT) headers.Authorization = `Bearer ${process.env.ONECLICK_JWT}`;
 for (const route of tokens.length ? ROUTES : []) {
-  const label = `POST /v0/quote (dry) $20 of ${route.symbol} on ${route.chain} → wNEAR`;
+  const label = `POST /v0/quote (dry) $${route.usd} of ${route.symbol} on ${route.chain} → wNEAR`;
   const token = tokens.find((t) => t.blockchain === route.chain && t.symbol === route.symbol);
   if (!token || !wnear) { bad(label, 'token not in the 1Click list: PayDrawer routes may need new symbols'); continue; }
   try {
-    const units = (20 / (Number(token.price) || 1)) * 10 ** Math.min(token.decimals, 12);
+    const units = (route.usd / (Number(token.price) || 1)) * 10 ** Math.min(token.decimals, 12);
     const amount = (BigInt(Math.round(units)) * 10n ** BigInt(Math.max(0, token.decimals - 12))).toString();
     const request = buildQuoteRequest({
       dry: true, originAsset: token.assetId, destinationAsset: wnear.assetId, amount,

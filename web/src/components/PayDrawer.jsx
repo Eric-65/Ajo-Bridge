@@ -182,7 +182,14 @@ export function PayDrawer({ circle, onClose }) {
 
           <div className="card card--dark card--flat" aria-live="polite" style={{ background: 'var(--black)' }}>
             {preview.state === 'loading' && !q ? <div className="skeleton" style={{ height: '4.5rem', background: 'var(--ink-2)' }} /> : null}
-            {preview.state === 'error' ? <p className="danger" role="alert">No quote: {preview.message}</p> : null}
+            {preview.state === 'error' ? (
+              <div className="stack stack--sm" role="alert">
+                <p className="danger">No quote: {preview.message}</p>
+                {/minimum swap amount is \$?(\d+)/i.test(preview.message) ? (
+                  <p className="helper">1Click has a minimum of ${/minimum swap amount is \$?(\d+)/i.exec(preview.message)[1]} on this route right now. Raise the amount, or pick USDC on Base or SOL for smaller payments.</p>
+                ) : null}
+              </div>
+            ) : null}
             {q && preview.state !== 'error' ? (
               <div className="stack stack--sm">
                 <p className="label">Live quote</p>

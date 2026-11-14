@@ -3,7 +3,7 @@
  * Docs: https://docs.near-intents.org/integration/distribution-channels/1click-api
  * OpenAPI: https://1click.chaindefuser.com/docs/v0/openapi.yaml
  *
- * 1Click runs on MAINNET. The optional JWT (ONECLICK_JWT) removes the 0.25%
+ * 1Click runs on MAINNET (there is no 1Click testnet). The optional JWT (ONECLICK_JWT) removes the 0.2%
  * unauthenticated fee and must never reach the browser, which is why the web
  * app calls these proxies instead of 1Click directly.
  */

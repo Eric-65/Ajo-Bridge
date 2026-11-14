@@ -23,3 +23,20 @@ Record at phone width (390 px) or with the browser's device toolbar on; the app 
 ## Optional part 5 — testnet (after deploying)
 
 Connect Meteor Wallet (tap the status dot; it turns mint). Create a circle with a 2-minute round, join from two accounts, contribute, wait two minutes, run `node agent/alajo.js tick` and show the agent's `settle_round` and `post_note` transactions in the explorer.
+
+## Draft X post
+
+The organizers ask for: the user problem first, one complete moment on video, NEAR's role stated concretely, a next step, and the tags @NEARProtocol and #NEARHackathon. Fill in the two links, attach the video, and post it yourself.
+
+> In Nigerian savings circles (ajo), the collector can vanish with the pot, and the member paid first can stop paying. Both happen all the time.
+>
+> We built Ajo Bridge at #NEARHackathon: the circle runs in a NEAR contract with no withdraw function, and the first slot must lock what it still owes. In the video, slot 1 collects 99.20 NEAR, walks away, and ends at −0.80. Everyone else still gets a full pot.
+>
+> NEAR Intents lets family abroad pay in with USDC on Base or USDT on Tron. The AI coordinator holds a function-call key, so it can settle rounds but never touch funds.
+>
+> Try it (no wallet needed): <live demo link>
+> Code: <GitHub link>
+>
+> Would you trust a savings circle more if the collector were a contract? @NEARProtocol @NearBuilders @NearLegion
+
+That is about 640 characters, so it needs X Premium. For the free 280-character limit, post the first two paragraphs plus the links and tags, then add the rest as a reply.

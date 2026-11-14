@@ -243,6 +243,18 @@ SMOKE_URL=https://your-app.vercel.app npm run smoke
 
 Deployed contract address: _not deployed yet_. Live URL: _not deployed yet_.
 
+## Hackathon rules (answers to the HACKATHON.md FAQ)
+
+| Question | Answer for this project |
+| --- | --- |
+| When was it built? (Q-001) | Nov 13–14, 2026, inside the hackathon window. The first commit in this repository is the start of the project. |
+| Existing product or earlier code? (Q-002–Q-004) | None. New repository, new project, no pre-hackathon baseline. |
+| Libraries, templates, AI code? (Q-005) | Listed under [Credits](#credits) and [AI tools disclosure](#ai-tools-disclosure). No project template was used. |
+| Why does pay-from-any-chain use mainnet? (Q-007) | NEAR Intents has no testnet. The drawer previews with `dry: true` quotes and labels every mainnet step. |
+| Testnet-only contract? (Q-010) | Yes, the circle contract targets testnet. Only the 1Click integration is mainnet, because it is mainnet-only. |
+| Can judges run it without a hosted demo? (Q-012) | Yes: `npm run test:math`, `npm run demo` and `npm run dev` (demo mode) need no keys and no network. |
+| License (Q-014) | MIT, see [LICENSE](LICENSE). |
+
 ## Repository layout
 
 ```

@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-router';
 
 import { PERSONAS, demo } from '../lib/demoStore.js';
@@ -26,8 +26,47 @@ export function Wordmark() {
   );
 }
 
+function WalletButton() {
+  const { walletAccount, contractConfigured, connect, disconnect, connecting } = useApp();
+  const [open, setOpen] = useState(false);
+  const ref = useRef(null);
+  useEffect(() => {
+    if (!open) return undefined;
+    const close = (event) => { if (!ref.current?.contains(event.target)) setOpen(false); };
+    const onKey = (event) => { if (event.key === 'Escape') setOpen(false); };
+    document.addEventListener('pointerdown', close);
+    document.addEventListener('keydown', onKey);
+    return () => { document.removeEventListener('pointerdown', close); document.removeEventListener('keydown', onKey); };
+  }, [open]);
+
+  if (!walletAccount) {
+    return (
+      <button type="button" className="cta cta--sm wallet-btn" onClick={connect} data-busy={connecting || undefined} aria-label="Connect a NEAR testnet wallet">
+        <span className="wallet-btn__long">{connecting ? 'Connecting…' : 'Connect wallet'}</span>
+        <span className="wallet-btn__short" aria-hidden="true">{connecting ? '…' : 'Connect'}</span>
+      </button>
+    );
+  }
+  return (
+    <div className="wallet" ref={ref}>
+      <button type="button" className="status" data-state="live" aria-expanded={open} aria-haspopup="true" onClick={() => setOpen(!open)} aria-label={`Wallet ${walletAccount}. Open wallet menu.`}>
+        <span className="status__dot" />
+        <span className="wallet__name">{shortName(walletAccount)}</span>
+      </button>
+      {open ? (
+        <div className="wallet__menu" role="menu">
+          <p className="label">Connected</p>
+          <p className="wallet__account mono">{walletAccount}</p>
+          <p className="netlabel"><b data-net="testnet">testnet</b><span>{contractConfigured ? 'Using the Ajo Bridge contract' : 'Contract not deployed yet: circles show demo data'}</span></p>
+          <button type="button" className="cta cta--sm cta--dark" role="menuitem" onClick={() => { setOpen(false); disconnect(); }}>Disconnect</button>
+        </div>
+      ) : null}
+    </div>
+  );
+}
+
 function Header() {
-  const { mode, account, connect, disconnect, connecting } = useApp();
+  const { walletAccount, connect, disconnect, connecting } = useApp();
   const [open, setOpen] = useState(false);
   const location = useLocation();
   useEffect(() => setOpen(false), [location.pathname]);
@@ -36,8 +75,6 @@ function Header() {
     return () => { document.body.style.overflow = ''; };
   }, [open]);
 
-  const live = mode === 'testnet';
-  const statusLabel = live ? `Testnet · ${shortName(account)}` : 'Demo mode';
   return (
     <>
       <header className="header">
@@ -47,17 +84,7 @@ function Header() {
             <nav className="header__nav" aria-label="Main">
               {NAV.map((item) => <NavLink key={item.to} to={item.to} viewTransition>{item.label}</NavLink>)}
             </nav>
-            <button
-              type="button"
-              className="status"
-              data-state={live ? 'live' : 'demo'}
-              onClick={live ? disconnect : connect}
-              aria-label={live ? `Connected to NEAR testnet as ${account}. Disconnect wallet.` : 'Demo mode. Connect a NEAR testnet wallet.'}
-              title={live ? 'Disconnect wallet' : 'Connect wallet'}
-            >
-              <span className="status__dot" />
-              <span className="status__text">{connecting ? 'Connecting…' : statusLabel}</span>
-            </button>
+            <WalletButton />
             <button type="button" className="burger" aria-expanded={open} aria-controls="menu" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen(!open)}>
               <span /><span />
             </button>
@@ -70,8 +97,8 @@ function Header() {
             <NavLink key={item.to} to={item.to} style={{ '--i': i }} end viewTransition>{item.label}</NavLink>
           ))}
           <div className="menu__foot stack">
-            <p className="helper">{live ? `Connected to NEAR testnet as ${account}` : 'You are on demo data. Connect Meteor Wallet or NEAR Mobile to use the testnet contract.'}</p>
-            <Cta onClick={live ? disconnect : connect} busy={connecting}>{live ? 'Disconnect wallet' : 'Connect wallet'}</Cta>
+            <p className="helper">{walletAccount ? `Connected to NEAR testnet as ${walletAccount}.` : 'Connect Meteor Wallet (app, web or browser extension) on NEAR testnet. Without a wallet you can try everything on demo data.'}</p>
+            <Cta onClick={walletAccount ? disconnect : connect} busy={connecting}>{walletAccount ? 'Disconnect wallet' : 'Connect wallet'}</Cta>
           </div>
         </nav>
       ) : null}
@@ -80,11 +107,12 @@ function Header() {
 }
 
 function DemoBanner() {
-  const { mode, account, toast } = useApp();
+  const { mode, account, toast, walletAccount } = useApp();
   if (mode !== 'demo') return null;
   return (
     <div className="banner" role="region" aria-label="Demo mode">
       <span className="tag tag--demo">Demo data</span>
+      {walletAccount ? <span>Wallet connected · contract not deployed yet</span> : null}
       <label htmlFor="persona">Acting as</label>
       <select id="persona" value={account} onChange={(event) => demo.setPersona(event.target.value)}>
         {PERSONAS.map((p) => <option key={p} value={p}>{p}</option>)}

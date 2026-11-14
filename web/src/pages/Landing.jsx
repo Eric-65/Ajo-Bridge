@@ -8,7 +8,7 @@ import { HalftoneArt } from '../components/Art.jsx';
 import { SavingsRing } from '../components/SavingsRing.jsx';
 import { SlotPicker } from '../components/SlotPicker.jsx';
 import { Ticker } from '../components/Ticker.jsx';
-import { Accordion, Cta, Eyebrow, HighlightHeading, Scramble, SegmentBar, Skeleton, Stat } from '../components/ui.jsx';
+import { Accordion, Cta, Eyebrow, HighlightHeading, Hl, Scramble, SegmentBar, Skeleton, Stat } from '../components/ui.jsx';
 import { near, percent, roundLength } from '../lib/format.js';
 import { useApp, useCircle, useCircles } from '../lib/store.jsx';
 
@@ -199,7 +199,7 @@ export function LandingPage() {
           <Eyebrow plain>— Which means</Eyebrow>
           <p className="mint-statement reveal">
             We don&apos;t ask you to trust the collector.{' '}
-            <span className="hl">We</span> <span className="hl">removed</span> <span className="hl">the</span> <span className="hl">collector.</span>
+            <Hl i={0}>We</Hl> <Hl i={1}>removed</Hl> <Hl i={2}>the</Hl> <Hl i={3}>collector.</Hl>
           </p>
           <Cta to="/create" variant="dark" size="lg">Start a circle</Cta>
         </div>

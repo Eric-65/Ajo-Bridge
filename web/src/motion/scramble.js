@@ -6,12 +6,13 @@ const GLYPHS = 'ABCDEFGHJKLMNPQRSTUVWXYZ0123456789#/+<>';
 /**
  * @param {HTMLElement} el      element whose textContent is animated
  * @param {string} text         the final text
- * @param {{duration?: number, delay?: number}} [options]
+ * @param {{duration?: number, delay?: number, onDone?: () => void}} [options]
  * @returns {() => void} cancel
  */
-export function scramble(el, text, { duration = 900, delay = 0 } = {}) {
+export function scramble(el, text, { duration = 900, delay = 0, onDone } = {}) {
   if (reducedMotion()) {
     el.textContent = text;
+    onDone?.();
     return () => {};
   }
   const chars = [...text];
@@ -35,6 +36,6 @@ export function scramble(el, text, { duration = 900, delay = 0 } = {}) {
       }
       el.textContent = out;
     },
-    onDone: () => { el.textContent = text; },
+    onDone: () => { el.textContent = text; onDone?.(); },
   });
 }

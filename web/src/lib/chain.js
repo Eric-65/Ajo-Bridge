@@ -1,6 +1,7 @@
 /**
  * NEAR testnet backend: view calls straight to the RPC, change calls through
- * the connected wallet (@hot-labs/near-connect: Meteor Wallet, NEAR Mobile, …).
+ * the connected wallet (@hot-labs/near-connect). On testnet the picker offers Meteor Wallet,
+ * Intear, Nightly, Ledger and others; NEAR Mobile is mainnet-only in the connector's manifest.
  */
 import { deserializeCircle } from '@shared/ajoEngine.js';
 
@@ -83,7 +84,7 @@ export const wallet = {
     return walletAccount;
   },
 
-  /** Opens the wallet picker (Meteor Wallet and NEAR Mobile are in the list on testnet). */
+  /** Opens the wallet picker. Works without a deployed contract: circles stay on demo data until one is configured. */
   async connect() {
     const c = await connector();
     const w = await c.connect();

@@ -30,15 +30,54 @@ export function Cta({ children, to, href, size, variant, done, busy, note, pull 
 export const Eyebrow = ({ children, plain }) => <p className={`eyebrow${plain ? ' eyebrow--plain' : ''}`}>{children}</p>;
 
 /**
+ * One highlighted word: a dark block that wipes in from the left, then a mint
+ * word that decodes out of random glyphs. The real text stays in the DOM for
+ * screen readers and search; the scrambling happens in a separate aria-hidden
+ * layer that React never renders into, so text updates stay safe.
+ */
+export function Hl({ children, i = 0, tone }) {
+  const text = String(children);
+  const ref = useRef(null);
+  const fx = useRef(null);
+  useEffect(() => {
+    const el = ref.current;
+    el.classList.remove('is-on', 'is-done');
+    let cancel = () => {};
+    const stop = onceInView(el, () => {
+      el.classList.add('is-on');
+      cancel = scramble(fx.current, text, {
+        delay: 260 + i * 140,
+        duration: Math.min(900, 360 + text.length * 50),
+        onDone: () => el.classList.add('is-done'),
+      });
+    }, { threshold: 0.35 });
+    return () => { stop(); cancel(); };
+  }, [text, i]);
+  return (
+    <span ref={ref} className="hl" data-tone={tone} style={{ '--i': i }}>
+      <span className="hl__real">{text}</span>
+      <span ref={fx} className="hl__fx" aria-hidden="true" />
+    </span>
+  );
+}
+
+/**
  * Big uppercase heading where some words sit in mint-on-dark blocks.
  * `parts` is a list of strings; wrap a string in [brackets] to highlight it.
+ * Each highlighted word becomes its own block, staggered left to right.
  */
 export function HighlightHeading({ parts, as: Tag = 'h2', className = 'display' }) {
+  let n = 0;
   return (
     <Tag className={`${className} hl-heading`}>
       {parts.map((part, i) => {
         const match = /^\[(.+)\]$/.exec(part);
-        return match ? <span key={i}><span className="hl">{match[1]}</span>{' '}</span> : <span key={i}>{part} </span>;
+        if (!match) return <span key={i}>{part} </span>;
+        return (
+          <span key={i}>
+            {match[1].split(/\s+/).map((word, j) => <span key={j}><Hl i={n++}>{word}</Hl>{' '}</span>)}
+          </span>
+        );
       })}
     </Tag>
   );

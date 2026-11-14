@@ -65,7 +65,7 @@ Open https://ajo-bridge.vercel.app, or run it locally with `cd web && npm instal
 
 | # | Do | See |
 | --- | --- | --- |
-| 5 | Open the home page | A grey status dot and a striped **DEMO DATA** badge. In the ring, coins travel from six members into the pot, then the pot flows to one member; the recipient changes each loop. |
+| 5 | Open the home page | A mint **› CONNECT WALLET** button in the header and a striped **DEMO DATA** badge. In the ring, coins travel from six members into the pot, then the pot flows to one member; the recipient changes each loop. On scroll, the green-on-black words in **The promise** decode into place. |
 | 6 | Open **Circles**, then **Balogun Market Traders** | Round 2 of 5. The pot shows 60. `bayo` is marked **COLLECTS**. `ada` is marked **TO PAY** and **PAID OUT**: she was paid in round 1 and has not paid round 2. You are acting as `you.demo`, slot 5. |
 | 7 | Press **› CONTRIBUTE** | A mint coin travels into the pot, the pot shows 80, and the button becomes **✓ PAID FOR ROUND 2**. |
 | 8 | Press **Demo only: skip to the deadline**, then **› SETTLE ROUND NOW** | A red flash: `ada` is slashed 20 NEAR and gains a **MISSED 1** tag. A message reads `Round paid: 99.40 NEAR to bayo.` The page moves to round 3 of 5. |
@@ -78,6 +78,7 @@ Open https://ajo-bridge.vercel.app, or run it locally with `cd web && npm instal
 | 15 | Open **Start a circle**. Switch between **Strangers · 100%** and **Friends · 50%**, and move the order-fee slider | The collateral bars animate: 80 / 60 / 40 / 20 / 20 for strangers, 40 / 30 / 20 / 20 / 20 for friends. |
 | 16 | Type a name and press **› CREATE CIRCLE** | You land on the new circle's page with the tag **FILLING: PICK A SLOT** and five open slots. |
 | 17 | On a running circle press **› PAY FROM ANY CHAIN** | A drawer with **MAINNET** and **TESTNET** labels. If the 1Click API is reachable you see a live quote for USDC on Base; if not, the drawer says quotes are unavailable. It never shows a made-up quote. |
+| 18 | Tap **› CONNECT WALLET** in the header | The wallet picker opens with **Meteor Wallet** first, then other testnet wallets. After you connect, the button turns into your account name with a mint dot; tap it to see the network and **Disconnect**. Until the testnet contract is deployed, circles stay on demo data and the banner says so. |
 
 ### C. Contract on a local NEAR sandbox
 
@@ -85,9 +86,9 @@ Run `npm run setup` once first.
 
 | # | Do | See |
 | --- | --- | --- |
-| 18 | Run `npm run test:contract` | `10 tests passed` after about 5 minutes. |
-| 19 | Read the test names in the output | `INVARIANT on chain: slot 1 collects the pot and walks away — no gain, nobody else loses` (checked on real account balances). `the Alajo agent: notes only, with a function-call key that cannot move money` (NEAR rejects `contribute`, attached deposits and transfers signed with the agent's key). `custody: there is no way to pull money out of a circle`. `gas and storage: a full 12-member circle where nobody ever pays stays within limits` (heaviest call about 47 Tgas of the 300 Tgas limit). |
-| 20 | Open the **CI** badge at the top of this page | The same three jobs (unit tests, contract sandbox tests, web build) passing on GitHub's machines. |
+| 19 | Run `npm run test:contract` | `10 tests passed` after about 5 minutes. |
+| 20 | Read the test names in the output | `INVARIANT on chain: slot 1 collects the pot and walks away — no gain, nobody else loses` (checked on real account balances). `the Alajo agent: notes only, with a function-call key that cannot move money` (NEAR rejects `contribute`, attached deposits and transfers signed with the agent's key). `custody: there is no way to pull money out of a circle`. `gas and storage: a full 12-member circle where nobody ever pays stays within limits` (heaviest call about 47 Tgas of the 300 Tgas limit). |
+| 21 | Open the **CI** badge at the top of this page | The same three jobs (unit tests, contract sandbox tests, web build) passing on GitHub's machines. |
 
 ## Status: what was run and what was not
 
@@ -167,7 +168,7 @@ With a voucher, the *voucher* takes the loss in the walker's place — that is w
 | **Named sub-accounts** | `contract/scripts/deploy.sh` | `ajobridge.<you>.testnet` (contract), `alajo.<you>.testnet` (agent) |
 | **NEP-297 events** | every change method | `EVENT_JSON` logs: the web app's ring animates from them |
 | **near-workspaces sandbox** | `contract/tests/*.ava.js` | Time travel past deadlines, real balances, real access keys |
-| **near-connect wallet connector** | `web/src/lib/chain.js` | Meteor Wallet, NEAR Mobile and other testnet wallets |
+| **near-connect wallet connector** | `web/src/lib/chain.js`, header **CONNECT WALLET** button | Meteor Wallet (Android, iOS, web, Chrome extension) and other testnet wallets. NEAR Mobile is mainnet-only in the connector, so it is not offered for the testnet contract |
 
 ## Architecture
 
@@ -176,7 +177,7 @@ flowchart LR
   subgraph Browser["Web app (Vite + React)"]
     UI["Pages: landing, create, circle, simulator"]
     DEMO["Demo store<br/>(no wallet)"]
-    WAL["Wallet connector<br/>Meteor / NEAR Mobile"]
+    WAL["Wallet connector<br/>Meteor Wallet (testnet)"]
   end
 
   subgraph Shared["shared/ (pure JavaScript, BigInt)"]
@@ -259,7 +260,9 @@ node agent/alajo.js watch --interval 60          # keep coordinating
 
 ## Deploy
 
-None of these steps has been run yet for this repository.
+**Easiest: from GitHub, no computer or keys needed.** Open **Actions → Deploy contract to testnet → Run workflow**. It creates a fresh account with NEAR's testnet faucet, deploys and initialises the contract, checks it with a view call, and by default deletes the account's only full-access key, so nobody can change the contract's code afterwards. The run summary shows the contract ID; put it in Vercel as `VITE_AJO_CONTRACT_ID` and redeploy. Script: `contract/scripts/deploy-testnet-ci.sh`.
+
+**Or from your own machine** with near-cli-rs:
 
 ```bash
 cp .env.example .env                       # then fill in as you go

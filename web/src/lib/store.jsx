@@ -33,15 +33,17 @@ export function AppProvider({ children }) {
   }, []);
 
   const connect = useCallback(async () => {
-    if (!CONTRACT_ID) {
-      toast('No contract address is configured (VITE_AJO_CONTRACT_ID). You are on demo data.', 'error');
-      return;
-    }
     setConnecting(true);
     try {
-      await wallet.connect();
+      const accountId = await wallet.connect();
+      if (accountId && !CONTRACT_ID) {
+        toast(`Connected as ${accountId}. The circle contract is not deployed yet, so circles still show demo data.`);
+      } else if (accountId) {
+        toast(`Connected to NEAR testnet as ${accountId}.`);
+      }
     } catch (error) {
-      toast(`Wallet connection failed: ${error.message ?? error}`, 'error');
+      const message = String(error?.message ?? error);
+      if (!/reject|cancel|closed/i.test(message)) toast(`Wallet connection failed: ${message}`, 'error');
     } finally {
       setConnecting(false);
     }

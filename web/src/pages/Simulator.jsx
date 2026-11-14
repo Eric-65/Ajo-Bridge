@@ -4,7 +4,7 @@ import { parseNear } from '@shared/units.js';
 import { simulateWalkAway } from '@shared/simulate.js';
 
 import { SavingsRing } from '../components/SavingsRing.jsx';
-import { CountUp, Cta, Eyebrow, Scramble, SegmentBar } from '../components/ui.jsx';
+import { CountUp, Cta, Eyebrow, Hl, Scramble, SegmentBar } from '../components/ui.jsx';
 import { near, signedNear } from '../lib/format.js';
 import { flyChip, glitch } from '../motion/effects.js';
 import { reducedMotion } from '../motion/raf.js';
@@ -216,13 +216,13 @@ export function SimulatorPage() {
               <Eyebrow plain>— Verdict</Eyebrow>
               {safe ? (
                 <p className="mint-statement">
-                  {walker} walked away with{' '}<span className="hl">{signedNear(sim.walkerSideNet)}</span>{' '}<span className="hl">NEAR.</span>{' '}
-                  {backed ? 'Counting the backer who vouched. ' : ''}Everyone else was <span className="hl">made</span> <span className="hl">whole.</span>
+                  {walker} walked away with{' '}<Hl i={0}>{signedNear(sim.walkerSideNet)}</Hl>{' '}<Hl i={1}>NEAR.</Hl>{' '}
+                  {backed ? 'Counting the backer who vouched. ' : ''}Everyone else was <Hl i={2}>made</Hl> <Hl i={3}>whole.</Hl>
                 </p>
               ) : (
                 <p className="mint-statement">
-                  {walker} gained <span className="hl" style={{ color: 'var(--red)' }}>{signedNear(sim.walkerNet)}</span>. The group is short{' '}
-                  <span className="hl" style={{ color: 'var(--red)' }}>{near(sim.shortfall)}</span> NEAR.
+                  {walker} gained <Hl i={0} tone="danger">{signedNear(sim.walkerNet)}</Hl>. The group is short{' '}
+                  <Hl i={1} tone="danger">{near(sim.shortfall)}</Hl> NEAR.
                 </p>
               )}
               <p className="subtitle" style={{ textAlign: 'center' }}>

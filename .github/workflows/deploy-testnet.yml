@@ -1,0 +1,53 @@
+name: Deploy contract to testnet
+
+# Run by hand from the Actions tab (Run workflow). Uses NEAR's free testnet
+# faucet, so no keys or secrets are needed. See contract/scripts/deploy-testnet-ci.sh.
+on:
+  workflow_dispatch:
+    inputs:
+      name:
+        description: Contract account name, without .testnet (empty = ajobridge-<run id>)
+        required: false
+        default: ''
+      owner:
+        description: Owner and agent account, e.g. your Meteor testnet account (empty = the contract itself)
+        required: false
+        default: ''
+      lock:
+        description: Delete the contract's full-access key afterwards, so nobody can change its code
+        type: boolean
+        default: true
+
+permissions:
+  contents: read
+
+concurrency: deploy-testnet
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    outputs:
+      contract_id: ${{ steps.deploy.outputs.contract_id }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: contract/package-lock.json
+      - run: npm --prefix contract ci
+      - run: npm run build:contract
+      - run: npm install -g near-cli-rs@0.31.1
+      - id: deploy
+        env:
+          NAME_INPUT: ${{ inputs.name }}
+          OWNER_INPUT: ${{ inputs.owner }}
+          LOCK: ${{ inputs.lock }}
+        run: bash contract/scripts/deploy-testnet-ci.sh
+      - name: Live checks (1Click quote, contract views)
+        continue-on-error: true
+        env:
+          AJO_CONTRACT_ID: ${{ steps.deploy.outputs.contract_id }}
+          NEAR_RPC_URL: https://rpc.testnet.near.org
+        run: npm run smoke

@@ -1,9 +1,9 @@
 import test from 'node:test';
 import assert from 'node:assert/strict';
 
-import alajo from '../alajo.js';
-import { buildQuoteRequest } from '../quote.js';
-import { contribute, createCircle, join, requiredCollateral, serializeCircle } from '../../shared/ajoEngine.js';
+import alajo from '../api/alajo.js';
+import { buildQuoteRequest } from '../api/quote.js';
+import { contribute, createCircle, join, requiredCollateral, serializeCircle } from '../shared/ajoEngine.js';
 
 const USDC_BASE = 'nep141:base-0x833589fcd6edb6e08f4c7c32d4f71b54bda02913.omft.near';
 const good = { originAsset: USDC_BASE, destinationAsset: 'nep141:wrap.near', amount: '20000000', recipient: 'ada.near', refundTo: '0x000000000000000000000000000000000000dEaD' };

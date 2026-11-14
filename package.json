@@ -6,12 +6,12 @@
   "license": "MIT",
   "type": "module",
   "engines": {
-    "node": ">=22"
+    "node": "22.x"
   },
   "scripts": {
     "setup": "npm --prefix contract install && npm --prefix web install && npm --prefix agent install",
     "test": "npm run test:math && npm run test:contract",
-    "test:math": "node --test \"shared/tests/*.test.js\" \"api/tests/*.test.js\"",
+    "test:math": "node --test \"shared/tests/*.test.js\" \"tests/*.test.js\"",
     "test:contract": "npm --prefix contract test",
     "build:contract": "npm --prefix contract run build",
     "demo": "node scripts/demo.js",

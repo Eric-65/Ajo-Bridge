@@ -1,0 +1,6 @@
+contract/
+agent/
+scripts/
+tests/
+.agents/
+.claude/

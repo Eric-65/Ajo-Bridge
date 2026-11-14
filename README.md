@@ -92,6 +92,47 @@ Open https://ajo-bridge.vercel.app, or run it locally with `cd web && npm instal
 | 17 | On a running circle press **› PAY FROM ANY CHAIN** | A drawer with **MAINNET** and **TESTNET** labels. If the 1Click API is reachable you see a live quote for USDC on Base; if not, the drawer says quotes are unavailable. It never shows a made-up quote. |
 | 18 | Tap **› CONNECT WALLET** in the header | The wallet picker opens with **Meteor Wallet** first, then other testnet wallets. After you connect, the button turns into your account name with a mint dot; tap it to see the network and **Disconnect**. Until the testnet contract is deployed, circles stay on demo data and the banner says so. |
 
+### Live on NEAR testnet (real wallet, real transactions)
+
+You need [Meteor Wallet](https://meteorwallet.app) (Android, iOS, web or Chrome extension) switched to **testnet**. Testnet NEAR is free and has no value.
+
+| # | Do | See |
+| --- | --- | --- |
+| L1 | Open https://ajo-bridge.vercel.app | A **LIVE · NEAR TESTNET** bar and a mint dot in the header. The totals (circles, members, NEAR locked, rounds paid) are read from `ajobridge-circles.testnet`. No wallet needed to look around |
+| L2 | In Meteor, switch the network to testnet, create a `.testnet` account, and get free testnet NEAR from a faucet such as [near-faucet.io](https://near-faucet.io) | A testnet balance of a few NEAR |
+| L3 | Tap **› CONNECT WALLET** and pick Meteor | The button turns into your account name. If you connect a mainnet account or an empty one, a panel explains how to switch and where to get testnet NEAR |
+| L4 | Open **Circles → Open**, then **Lagos to London Family** (circle #3, https://ajo-bridge.vercel.app/c/3) | A seeded circle with open slots. Taken slots show **✓ TAKEN**; open ones show **› TAKE SLOT k** and the collateral |
+| L5 | Tap an open slot, then **› LOCK … NEAR**, and approve in Meteor | A "Confirmed on NEAR testnet" message with **View transaction**. Your name appears on the ring and in the member list, with your collateral locked |
+| L6 | Open **My circles** | That circle with your payout round and collateral |
+| L7 | Open **Balogun Market Traders** (circle #4) | Round 1 of 3 with two members paid and one to pay, and a countdown to the deadline |
+| L8 | Open **Quick Settle Demo** (circle #5) and, once its 60-second deadline has passed, tap **› SETTLE ROUND NOW** and approve | Anyone can settle: the member who did not pay is slashed and the round's recipient is paid, in one transaction you can open on the explorer |
+| L9 | On any circle tap **Share on WhatsApp** | WhatsApp opens with the circle name, contribution, open slots and an invite link (`/c/<id>`) that lands on the slot picker |
+
+### Real testnet transactions
+
+Signed against `ajobridge-circles.testnet` on Nov 14, 2026 by `scripts/seed-testnet.js` (Actions → **Seed testnet circles**, run 43637549360), using three throwaway faucet accounts whose keys were wiped after the run. These are the same calls, with the same deposits, that the web app sends through the wallet.
+
+| Method | What happened | Transaction |
+| --- | --- | --- |
+| `create_circle` | Lagos to London Family (#3) | [G7Mnhavo9U…](https://testnet.nearblocks.io/txns/G7Mnhavo9U6wrsyEe3NNbmCmKU6TnoGxJquhM73wZVkG) |
+| `join` | slot 1 with a 10% reserve | [REd81wkDNC…](https://testnet.nearblocks.io/txns/REd81wkDNC3ewDinBUMuTrSXGiwyauxddz3kobCRiUR) |
+| `vouch` | a backer fills the rest of slot 1 | [HLcYmrGKCb…](https://testnet.nearblocks.io/txns/HLcYmrGKCbuVuwvhkZNdhFnsYCdexZFqVqZdmoNjt5Xm) |
+| `join` | slot 4 | [DgjFjywECD…](https://testnet.nearblocks.io/txns/DgjFjywECDX3ugpwysPZt5vC7yoePyjyhyzF16ZB3UnW) |
+| `leave` | before the start: full refund | [13WiVA8evw…](https://testnet.nearblocks.io/txns/13WiVA8evwQoHyvemKCdSM3QRSdkzpUzn915K5rbkn4Z) |
+| `create_circle` | Balogun Market Traders (#4) | [2EWTrFKCE7…](https://testnet.nearblocks.io/txns/2EWTrFKCE7rY3eSYizPZ3idbB3HoUtpMmTG5JHsLMzhP) |
+| `join` | slot 1 | [9AU95yTf2A…](https://testnet.nearblocks.io/txns/9AU95yTf2A7ks7LEDFeV8zmd1tk2xAS1cNykPqQvyCGk) |
+| `join` | slot 2 | [DRiXXHxuPG…](https://testnet.nearblocks.io/txns/DRiXXHxuPGUgrDKQdBXa1Qwbg1rDinKdfuXkh3mNJ1yZ) |
+| `join` | slot 3: the circle starts | [J6oapL29a5…](https://testnet.nearblocks.io/txns/J6oapL29a5dfuv8D2g5woDbFAofAuxXGt3MuhWdVCgTX) |
+| `contribute` | round 1 | [HS9nHLrLNH…](https://testnet.nearblocks.io/txns/HS9nHLrLNHdDUrwmHoCc2bkMVdSpwMtWAPLLZkJ1LJ2B) |
+| `contribute` | round 1 | [F14i1zY6eq…](https://testnet.nearblocks.io/txns/F14i1zY6eqhwUf36x9wVf8WojC8ThSitounECFUDPVJ9) |
+| `create_circle` | Quick Settle Demo (#5) | [7h5yhUwgXJ…](https://testnet.nearblocks.io/txns/7h5yhUwgXJHZ8jiezKjKR5LVD7Ugeqea5MbzbJd4BdXS) |
+| `join` | slot 1 | [DJqSaDzd1T…](https://testnet.nearblocks.io/txns/DJqSaDzd1Ti5UbEQD2Q5AsoDETPuSCcFTwYzgpidyeJM) |
+| `join` | slot 2: the circle starts | [K4Mv1dzGxn…](https://testnet.nearblocks.io/txns/K4Mv1dzGxnTZGuyhTay4Nqr5CpgstJaVazK7PtMVVww) |
+| `contribute` | round 1 (the other member does not pay) | [J9A4AT6T9H…](https://testnet.nearblocks.io/txns/J9A4AT6T9HiPvxsopHq6876iro2ToXakznjmEWR3gkVN) |
+| `settle_round` | after the deadline, by a third account: the non-payer is slashed 0.5 NEAR, the recipient is paid | [Hn7EPVegPw…](https://testnet.nearblocks.io/txns/Hn7EPVegPwoBNWTKiy6mX3J5yPD235izUiZsDd9Xy6Qr) |
+
+**Not yet run end to end:** the same flows signed through Meteor Wallet in the browser. The app code for it is in place (`web/src/lib/chain.js`); try steps L3–L8 above. An earlier seeding run stalled on a rate-limited RPC and left partial circles #0–#2 on the contract.
+
 ### C. Contract on a local NEAR sandbox
 
 Run `npm run setup` once first.

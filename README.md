@@ -9,7 +9,7 @@ Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`)
 
 **Live demo:** https://ajo-bridge.vercel.app (no wallet needed: it opens in demo mode)
 
-**Contents:** [What it does](#what-it-does) · [The problem it solves](#the-problem-it-solves) · [How to run it](#how-to-run-it) · [Try it: do X, see Y](#try-it-do-x-see-y) · [Status](#status-what-was-run-and-what-was-not) · [How it works](#how-it-works) · [NEAR tech](#near-tech-used-and-where) · [Deploy](#deploy)
+**Contents:** [What it does](#what-it-does) · [Screenshots](#screenshots) · [The problem it solves](#the-problem-it-solves) · [How to run it](#how-to-run-it) · [Try it: do X, see Y](#try-it-do-x-see-y) · [Status](#status-what-was-run-and-what-was-not) · [How it works](#how-it-works) · [NEAR tech](#near-tech-used-and-where) · [Deploy](#deploy)
 
 ## What it does
 
@@ -23,6 +23,18 @@ A savings circle is a group that pays into a pot every round and takes turns col
 - **An AI coordinator, Alajo, without access to funds.** It answers questions about the circle in English, Pidgin and Yoruba, posts reminders, and settles late rounds using a key that cannot move money.
 
 The guarantee, which the tests prove: at 100% coverage, a member who collects the pot and walks away ends with a net loss, and every other member still receives a full pot.
+
+## Screenshots
+
+Phone screenshots of the app in demo mode (no wallet), from commit `739a4fc`, the build deployed at https://ajo-bridge.vercel.app.
+
+<table>
+<tr><td width="33%" valign="top"><img src="docs/screenshots/home.webp" alt="Home: the savings ring and the promise" width="260"><br><sub>Home: the savings ring and the promise</sub></td><td width="33%" valign="top"><img src="docs/screenshots/promise.webp" alt="Highlight words decode into place" width="260"><br><sub>Highlight words decode into place</sub></td><td width="33%" valign="top"><img src="docs/screenshots/wallet.webp" alt="CONNECT WALLET opens the NEAR wallet picker (Meteor first on testnet)" width="260"><br><sub>CONNECT WALLET opens the NEAR wallet picker (Meteor first on testnet)</sub></td></tr>
+<tr><td width="33%" valign="top"><img src="docs/screenshots/circle.webp" alt="Circle dashboard: round, recipient, countdown, pot" width="260"><br><sub>Circle dashboard: round, recipient, countdown, pot</sub></td><td width="33%" valign="top"><img src="docs/screenshots/slashed.webp" alt="After settling: ada is slashed 20 NEAR and marked MISSED" width="260"><br><sub>After settling: ada is slashed 20 NEAR and marked MISSED</sub></td><td width="33%" valign="top"><img src="docs/screenshots/alajo.webp" alt="Alajo answers from live circle state, here in Pidgin" width="260"><br><sub>Alajo answers from live circle state, here in Pidgin</sub></td></tr>
+<tr><td width="33%" valign="top"><img src="docs/screenshots/slots.webp" alt="Slot picker: taken slots in grey, open slots show the collateral" width="260"><br><sub>Slot picker: taken slots in grey, open slots show the collateral</sub></td><td width="33%" valign="top"><img src="docs/screenshots/create.webp" alt="Start a circle: collateral per slot updates live" width="260"><br><sub>Start a circle: collateral per slot updates live</sub></td><td width="33%" valign="top"><img src="docs/screenshots/verdict.webp" alt="Walk-away test verdict: the walker ends at −0.80 NEAR" width="260"><br><sub>Walk-away test verdict: the walker ends at −0.80 NEAR</sub></td></tr>
+</table>
+
+<img src="docs/screenshots/desktop-home.webp" alt="Desktop home page" width="49%"> <img src="docs/screenshots/desktop-circle.webp" alt="Desktop circle dashboard" width="49%">
 
 ## The problem it solves
 

@@ -70,7 +70,11 @@ export function CreatePage() {
           <div className="stack stack--lg">
             <div className="field">
               <label className="field__label" htmlFor="name">Circle name</label>
-              <input id="name" className="input" value={name} maxLength={LIMITS.MAX_NAME_LENGTH} placeholder="Balogun Market Traders" onChange={(e) => setName(e.target.value)} />
+              <input id="name" className="input" value={name} maxLength={LIMITS.MAX_NAME_LENGTH} placeholder="e.g. Family Savings" aria-describedby="name-hint" onChange={(e) => setName(e.target.value)} />
+              <span className="field__hint" id="name-hint">
+                Any name you like, such as Lagos Family, Uni Friends or Rent Fund. Up to {LIMITS.MAX_NAME_LENGTH} characters
+                {name.length > 0 ? ` (${LIMITS.MAX_NAME_LENGTH - name.length} left)` : ''}. Everyone can see it and it cannot be changed later.
+              </span>
             </div>
             <div className="grid-2">
               <div className="field">

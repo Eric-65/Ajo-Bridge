@@ -13,3 +13,9 @@ neardev/
 # Agent skills are installed locally with `npx skills add near/agent-skills` (see skills-lock.json)
 .agents/
 .claude/
+
+# Firebase emulator logs
+firebase-debug.log
+firestore-debug.log
+ui-debug.log
+.firebase/

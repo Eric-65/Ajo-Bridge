@@ -19,6 +19,7 @@
     "build": "npm --prefix web run build",
     "agent": "node agent/alajo.js",
     "smoke": "node scripts/smoke.js",
-    "seed:testnet": "node scripts/seed-testnet.js"
+    "seed:testnet": "node scripts/seed-testnet.js",
+    "test:community": "npx --yes firebase-tools@14.27.0 emulators:exec --only auth,firestore --project demo-ajo \"node --test tests/community-rules.test.mjs\""
   }
 }

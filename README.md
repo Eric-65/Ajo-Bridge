@@ -133,6 +133,19 @@ Signed against `ajobridge-circles.testnet` on Nov 14, 2026 by `scripts/seed-test
 
 **Not yet run end to end:** the same flows signed through Meteor Wallet in the browser. The app code for it is in place (`web/src/lib/chain.js`); try steps L3–L8 above. An earlier seeding run was slowed by a rate-limited RPC and also created circles #0–#2 with the same names; they are real but duplicates.
 
+### Community and invite links
+
+Needs the Firebase project described in [docs/community-setup.md](docs/community-setup.md); until it is configured the page says "being set up". To try it without one, run it on the emulators (same doc, last section).
+
+| # | Do | See |
+| --- | --- | --- |
+| P1 | Open **Community** in the header | A header with the live count `N people have joined`, a **Join the community** button, and a wall of the members who chose to show their profile |
+| P2 | Press **Join the community**, then **Continue with Google** (or create an account with name, email and password) | You land back on Community with your name, **You invited 0**, and a personal invite link `https://ajo-bridge.vercel.app/r/<code>` with **Copy**, **Share on WhatsApp** and **Share on X** |
+| P3 | Open your invite link in a private window | The sign-in page says **You were invited**. Create an account there |
+| P4 | Reload Community in the first window | **You invited 1**, and the header count is one higher. The home page strip says the same total |
+| P5 | Switch on **Show me in the community** | Your Google name and photo (or your name and initial for email accounts) appear on the wall. Your email never does. Switch it off and you disappear from the wall; you are still counted |
+| P6 | Run `npm run test:community` (needs Java) | `# pass 8`: the security rules, run against the Firebase emulators with real signed-in users. Nobody can read another person's account, fake a referral, invite themselves, change their invite code, or publish someone else's profile |
+
 ### C. Contract on a local NEAR sandbox
 
 Run `npm run setup` once first.
@@ -152,6 +165,7 @@ Run `npm run setup` once first.
 | Web app | **Live by default** (since Nov 14): reads `ajobridge-circles.testnet` with view calls, no wallet needed; signing needs a testnet wallet. Demo is opt-in (**Try the demo**) or automatic if no RPC answers |
 | Pay-from-any-chain (1Click proxy + drawer) | **Quotes verified live** (Actions → Live checks): mainnet `dry` quotes for $20 of USDC on Base and SOL, $120 of USDT on Tron (1Click has a $100 minimum on that route), and the hosted `/api/tokens` proxy. **Not tested:** a real deposit (`dry: false`) and the status tracker after a deposit |
 | Alajo (`/api/alajo`, `agent/alajo.js`) | **Verified live:** the hosted `/api/alajo` answers from circle state with the built-in English/Pidgin/Yoruba templates. **Not tested:** NEAR AI Cloud phrasing (no API key configured), and the agent script against testnet. On the deployed contract the agent is the locked contract itself, so `post_note` cannot be called there |
+| Community sign-in and invite links (`/community`, `/r/<code>`) | **Built and tested on the Firebase emulators:** Google and email sign-in, invite links, referral counts, opt-in profile wall; 8 security-rule tests in CI. **Needs** a Firebase project and four Vercel variables before it works on the hosted site ([setup](docs/community-setup.md)) |
 | Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
 | Testnet deployment | **Deployed:** [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet), by Actions → Deploy contract to testnet. Initialised, checked with `get_config`, and **locked**: its only full-access key was deleted, so nobody can change its code |
 | Hosted site | https://ajo-bridge.vercel.app — opens in LIVE mode on NEAR testnet. **Live checks** opens it in a real browser and confirms it lists circles from the chain |
@@ -170,7 +184,8 @@ The build environment had no access to NEAR testnet, the 1Click API, NEAR AI Clo
 | What a 1Click payment does | **mainnet** | Delivers wNEAR to the payer's mainnet account. It does **not** pay the testnet round automatically |
 | Alajo answers | — | From real circle state. Phrased by NEAR AI Cloud when `NEAR_AI_API_KEY` is set; otherwise by built-in templates, labelled as such |
 | Alajo settling rounds / posting notes | NEAR **testnet** | Real transactions with a function-call key (needs the deployed contract) |
-| Imagery | — | Six stock photographs from Pixabay, used as mood images only. The people shown are models, not users of Ajo Bridge. The hero's dot field is drawn in the browser |
+| Community count, invite counts and profile wall | Firebase (Google) | **Real** sign-ups only. Nothing is seeded; the count starts at the number of people who actually signed up. Profiles appear only for members who switch them on |
+| Imagery | — | Six stock photographs from Pixabay and one crowd photograph (Community header) supplied by the project owner, used as mood images only. The people shown are not users of Ajo Bridge. The hero's dot field is drawn in the browser |
 
 ## How it works
 
@@ -373,6 +388,8 @@ contract/   near-sdk-js contract, sandbox tests (near-workspaces + ava), deploy 
 web/        Vite + React app
   src/styles/   tokens.css, base.css, components.css, motion.css (hand-written CSS)
   src/motion/   requestAnimationFrame / Web Animations helpers (no animation library)
+firestore.rules, firebase.json   community data rules (Firebase) and emulator config
+docs/       community-setup.md, screenshots
 api/        serverless functions: quote, status, tokens (1Click proxy), alajo
 agent/      alajo.js (coordinator), setup-key.sh (function-call key)
 ```
@@ -399,7 +416,7 @@ Earlier onchain ROSCAs include WeTrust's Trusted Lending Circles on Ethereum and
 ## Credits
 
 - **Visual direction**: styled after the layout language of an editorial agency template supplied by the project owner (near-black, white and mint; squared display type; cut-corner bars). No brand names, logos, text or photographs from that template are used.
-- **Photographs**: six images from [Pixabay](https://pixabay.com), used under the [Pixabay Content License](https://pixabay.com/service/license-summary/) (free for commercial and non-commercial use, no attribution required). Supplied by the project owner, converted to black and white with a vignette and grain, and resized to WebP in `web/public/img/`. They are mood images: the people shown are models and are not users of, or endorsing, Ajo Bridge.
+- **Photographs**: six images from [Pixabay](https://pixabay.com), used under the [Pixabay Content License](https://pixabay.com/service/license-summary/) (free for commercial and non-commercial use, no attribution required). Supplied by the project owner, converted to black and white with a vignette and grain, and resized to WebP in `web/public/img/`. They are mood images: the people shown are models and are not users of, or endorsing, Ajo Bridge. The Community header is a crowd photograph supplied by the project owner, cropped to remove signs and treated the same way; the people in it are not users of, or endorsing, Ajo Bridge.
 - **Hero dot field**: drawn in the browser by `web/src/motion/halftone.js`.
 - **Fonts** (SIL Open Font License, self-hosted through Fontsource): Oxanium, Inter Tight, JetBrains Mono.
 - **Libraries**: near-sdk-js, near-workspaces, ava, near-api-js, @hot-labs/near-connect, React, React Router, Vite, qrcode.

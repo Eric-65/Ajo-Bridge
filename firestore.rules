@@ -1,0 +1,76 @@
+rules_version = '2';
+
+// Ajo Bridge community: sign-ups, opt-in public profiles and invite links.
+//
+//   users/{uid}       private account record (owner only): refCode, referredBy, showInCommunity
+//   refCodes/{code}   invite code → { uid }; anyone can look a code up, never list them
+//   members/{uid}     { joinedAt } only: public, so anyone can count sign-ups without seeing who
+//   profiles/{uid}    { displayName, photoURL, joinedAt }: exists only while the user opts in
+//   referrals/{uid}   { by: inviterUid, createdAt }: written once, at sign-up; only the inviter can read it
+//
+// Emails are never stored in Firestore.
+service cloud.firestore {
+  match /databases/{database}/documents {
+    function signedIn() { return request.auth != null; }
+    function isOwner(uid) { return signedIn() && request.auth.uid == uid; }
+    function path(collection, id) { return /databases/$(database)/documents/$(collection)/$(id); }
+
+    match /users/{uid} {
+      allow get: if isOwner(uid);
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['refCode', 'referredBy', 'showInCommunity', 'createdAt'])
+        && request.resource.data.refCode is string
+        && getAfter(path('refCodes', request.resource.data.refCode)).data.uid == uid
+        && (request.resource.data.referredBy == null || request.resource.data.referredBy is string)
+        && request.resource.data.showInCommunity is bool
+        && request.resource.data.createdAt == request.time;
+      allow update: if isOwner(uid)
+        && request.resource.data.diff(resource.data).affectedKeys().hasOnly(['showInCommunity'])
+        && request.resource.data.showInCommunity is bool;
+    }
+
+    match /refCodes/{code} {
+      allow get: if true;
+      allow create: if signedIn()
+        && code.matches('^[a-z0-9]{7}$')
+        && request.resource.data.keys().hasOnly(['uid'])
+        && request.resource.data.uid == request.auth.uid
+        && !exists(path('users', request.auth.uid));
+    }
+
+    match /members/{uid} {
+      allow read: if true;
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['joinedAt'])
+        && request.resource.data.joinedAt == request.time;
+    }
+
+    match /profiles/{uid} {
+      allow read: if true;
+      allow create, update: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['displayName', 'photoURL', 'joinedAt'])
+        && request.resource.data.displayName is string
+        && request.resource.data.displayName.size() > 0
+        && request.resource.data.displayName.size() <= 60
+        && (request.resource.data.photoURL == null
+            || (request.resource.data.photoURL is string
+                && request.resource.data.photoURL.size() <= 500
+                && request.resource.data.photoURL.matches('^https://.*')))
+        && request.resource.data.joinedAt is timestamp;
+      allow delete: if isOwner(uid);
+    }
+
+    match /referrals/{uid} {
+      // Only in the same batch that creates the new member: a referral cannot be added later.
+      allow create: if isOwner(uid)
+        && request.resource.data.keys().hasOnly(['by', 'createdAt'])
+        && request.resource.data.by is string
+        && request.resource.data.by != request.auth.uid
+        && exists(path('members', request.resource.data.by))
+        && !exists(path('members', uid))
+        && existsAfter(path('members', uid))
+        && request.resource.data.createdAt == request.time;
+      allow read: if signedIn() && resource.data.by == request.auth.uid;
+    }
+  }
+}

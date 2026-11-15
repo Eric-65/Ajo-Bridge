@@ -3,6 +3,7 @@ import { Link, NavLink, Outlet, ScrollRestoration, useLocation } from 'react-rou
 
 import { PERSONAS, demo } from '../lib/demoStore.js';
 import { shortName } from '../lib/format.js';
+import { useCommunity } from '../lib/communityStore.jsx';
 import { useApp } from '../lib/store.jsx';
 import { installRevealFallback } from '../motion/reveal.js';
 import { Cta, Drawer } from './ui.jsx';
@@ -10,6 +11,7 @@ import { Cta, Drawer } from './ui.jsx';
 const NAV = [
   { to: '/circles', label: 'Circles' },
   { to: '/mine', label: 'My circles' },
+  { to: '/community', label: 'Community' },
   { to: '/create', label: 'Start a circle' },
   { to: '/simulator', label: 'Walk-away test' },
 ];
@@ -66,10 +68,29 @@ function WalletButton() {
   );
 }
 
+function AccountChip() {
+  const { configured, user } = useCommunity();
+  if (!configured || !user) return null;
+  const name = user.displayName || user.email || 'You';
+  return (
+    <Link to="/community" className="account-chip" aria-label={`Your community account: ${name}`} viewTransition>
+      {user.photoURL ? <img src={user.photoURL} alt="" referrerPolicy="no-referrer" /> : <span>{name[0].toUpperCase()}</span>}
+    </Link>
+  );
+}
+
 function ModeDot() {
   const { mode } = useApp();
   const live = mode === 'testnet';
   return <span className="mode-dot" data-live={live} role="img" aria-label={live ? 'Live on NEAR testnet' : 'Demo mode'} title={live ? 'Live · NEAR testnet' : 'Demo mode'} />;
+}
+
+function MenuAccount() {
+  const { configured, user, signOut } = useCommunity();
+  if (!configured) return null;
+  return user
+    ? <Cta variant="dark" onClick={signOut}>Sign out of the community</Cta>
+    : <Cta to="/signin" variant="dark">Sign in · get your invite link</Cta>;
 }
 
 function Header() {
@@ -91,6 +112,7 @@ function Header() {
             <nav className="header__nav" aria-label="Main">
               {NAV.map((item) => <NavLink key={item.to} to={item.to} viewTransition>{item.label}</NavLink>)}
             </nav>
+            <AccountChip />
             <ModeDot />
             <WalletButton />
             <button type="button" className="burger" aria-expanded={open} aria-controls="menu" aria-label={open ? 'Close menu' : 'Open menu'} onClick={() => setOpen(!open)}>
@@ -107,6 +129,7 @@ function Header() {
           <div className="menu__foot stack">
             <p className="helper">{walletAccount ? `Connected to NEAR testnet as ${walletAccount}.` : 'Connect Meteor Wallet (app, web or browser extension) on NEAR testnet. Without a wallet you can try everything on demo data.'}</p>
             <Cta onClick={walletAccount ? disconnect : connect} busy={connecting}>{walletAccount ? 'Disconnect wallet' : 'Connect wallet'}</Cta>
+            <MenuAccount />
           </div>
         </nav>
       ) : null}

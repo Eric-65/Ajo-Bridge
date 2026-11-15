@@ -1,4 +1,4 @@
-import { useMemo } from 'react';
+import { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router';
 
 import { slotTable, walkAwayPayoff } from '@shared/ajoMath.js';
@@ -10,6 +10,8 @@ import { SlotPicker } from '../components/SlotPicker.jsx';
 import { Ticker } from '../components/Ticker.jsx';
 import { Accordion, Cta, Eyebrow, HighlightHeading, Hl, Scramble, SegmentBar, Skeleton, Stat } from '../components/ui.jsx';
 import { near, percent, roundLength } from '../lib/format.js';
+import { countMembers } from '../lib/community.js';
+import { useCommunity } from '../lib/communityStore.jsx';
 import { circleStats } from '../lib/stats.js';
 import { useAllCircles, useApp, useCircle, useCircles } from '../lib/store.jsx';
 
@@ -32,6 +34,24 @@ function OpenCircle({ summary }) {
       <SlotPicker circle={circle} account={account} onTake={() => navigate(`/circle/${circle.id}`, { viewTransition: true })} limit={4} />
       <p className="helper">Leave any time before the circle starts and everything is refunded.</p>
     </div>
+  );
+}
+
+function CommunityStrip() {
+  const { configured, user } = useCommunity();
+  const [members, setMembers] = useState(null);
+  useEffect(() => { if (configured) countMembers().then(setMembers).catch(() => {}); }, [configured]);
+  if (!configured) return null;
+  return (
+    <section className="section section--tight on-black" aria-label="Community">
+      <div className="wrap row row--between">
+        <div className="stack stack--sm">
+          <p className="label mint">Community</p>
+          <p className="title">{members === null ? 'People are joining' : `${members} ${members === 1 ? 'person has' : 'people have'} joined Ajo Bridge`}</p>
+        </div>
+        <Cta to={user ? '/community' : '/signin'} className="cta--auto">{user ? 'Invite your friends' : 'Join them'}</Cta>
+      </div>
+    </section>
   );
 }
 
@@ -147,6 +167,8 @@ export function LandingPage() {
       <Ticker entries={activeCircle?.history?.slice(-14).reverse() ?? []} />
 
       <LiveStats />
+
+      <CommunityStrip />
 
       <section className="section section--tight">
         <div className="wrap split">

@@ -17,6 +17,10 @@ import { CirclesPage } from './pages/Circles.jsx';
 import { CreatePage } from './pages/Create.jsx';
 import { LandingPage } from './pages/Landing.jsx';
 import { MinePage } from './pages/Mine.jsx';
+import { CommunityPage } from './pages/Community.jsx';
+import { RefRedirect } from './pages/RefRedirect.jsx';
+import { SignInPage } from './pages/SignIn.jsx';
+import { CommunityProvider } from './lib/communityStore.jsx';
 import { ShareRedirect } from './pages/ShareRedirect.jsx';
 import { NotFoundPage } from './pages/NotFound.jsx';
 import { SimulatorPage } from './pages/Simulator.jsx';
@@ -31,6 +35,9 @@ const router = createBrowserRouter([
       { path: '/circle/:id', element: <CirclePage /> },
       { path: '/c/:id', element: <ShareRedirect /> },
       { path: '/mine', element: <MinePage /> },
+      { path: '/community', element: <CommunityPage /> },
+      { path: '/signin', element: <SignInPage /> },
+      { path: '/r/:code', element: <RefRedirect /> },
       { path: '/simulator', element: <SimulatorPage /> },
       { path: '*', element: <NotFoundPage /> },
     ],
@@ -40,7 +47,9 @@ const router = createBrowserRouter([
 createRoot(document.getElementById('root')).render(
   <StrictMode>
     <AppProvider>
-      <RouterProvider router={router} />
+      <CommunityProvider>
+        <RouterProvider router={router} />
+      </CommunityProvider>
     </AppProvider>
   </StrictMode>,
 );

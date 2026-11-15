@@ -26,6 +26,8 @@
   line-height: 1;
   white-space: nowrap;
 }
+.wordmark__text { display: inline-flex; flex-direction: column; gap: 0.28em; }
+.wordmark__sub { font-family: var(--font-mono, monospace); font-size: 0.4em; font-weight: 600; letter-spacing: 0.22em; text-transform: uppercase; color: var(--mint); }
 .wordmark__chev { width: 1.05em; height: 0.78em; flex: none; }
 .header__right { display: flex; align-items: center; gap: var(--s-3); }
 @media (min-width: 56rem) { .header__right { gap: var(--s-5); } }
@@ -98,6 +100,11 @@
   clip-path: polygon(0 0, 100% 0, 100% calc(100% - var(--cut)), calc(100% - var(--cut)) 100%, 0 100%);
   z-index: calc(var(--z-header) + 1);
   animation: rise var(--base) var(--ease-out) both;
+}
+/* On phones the wallet chip is not at the right edge (the menu button is), so a menu
+   anchored to the chip runs off the left of the screen: pin it under the header instead. */
+@media (max-width: 48rem) {
+  .wallet__menu { position: fixed; top: calc(var(--header-h) + 0.5rem); left: var(--gutter); right: var(--gutter); width: auto; }
 }
 .wallet__account { font-size: var(--text-sm); overflow-wrap: anywhere; }
 .wallet__menu .netlabel span { color: #c9c9c9; text-transform: none; font-weight: 500; }

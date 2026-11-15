@@ -153,7 +153,7 @@ export function LandingPage() {
             />
           </div>
           <div className="hero__copy">
-            <Eyebrow>Ajo · Esusu · Susu, on NEAR</Eyebrow>
+            <Eyebrow>Savings club · Ajo · Susu, on NEAR</Eyebrow>
             <Scramble as="h1" className="display" text="Save in a circle. Nobody runs with the pot." />
             <p className="subtitle">A rotating savings circle where the contract is the collector, and the member paid first cannot walk away with a gain.</p>
             <div className="hero__actions">

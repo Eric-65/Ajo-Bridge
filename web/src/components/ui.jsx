@@ -201,10 +201,15 @@ export function Accordion({ items, initial = 0 }) {
 /** Bottom sheet on phones, side panel on desktop. Closes on Escape and scrim click. */
 export function Drawer({ title, onClose, children, labelledBy = 'drawer-title' }) {
   const ref = useRef(null);
+  // Parents often pass a new onClose on every render (pages re-render each second for
+  // countdowns). Keep the latest one in a ref so the mount effect below runs once:
+  // re-running it would steal focus from inputs and close the phone keyboard mid-edit.
+  const closeRef = useRef(onClose);
+  useEffect(() => { closeRef.current = onClose; }, [onClose]);
   useEffect(() => {
     const previous = document.activeElement;
     ref.current?.focus();
-    const onKey = (event) => { if (event.key === 'Escape') onClose(); };
+    const onKey = (event) => { if (event.key === 'Escape') closeRef.current(); };
     document.addEventListener('keydown', onKey);
     document.body.style.overflow = 'hidden';
     return () => {
@@ -212,7 +217,7 @@ export function Drawer({ title, onClose, children, labelledBy = 'drawer-title' }
       document.body.style.overflow = '';
       previous?.focus?.();
     };
-  }, [onClose]);
+  }, []);
   return (
     <>
       <div className="scrim" onClick={onClose} />

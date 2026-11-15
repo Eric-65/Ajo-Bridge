@@ -18,8 +18,8 @@ const NAV = [
 
 export function Wordmark() {
   return (
-    <Link to="/" className="wordmark" aria-label="Ajo Bridge, home" viewTransition>
-      <span>AJO BRIDGE</span>
+    <Link to="/" className="wordmark" aria-label="Ajo Bridge savings club, home" viewTransition>
+      <span className="wordmark__text"><span>AJO BRIDGE</span><small className="wordmark__sub" aria-hidden="true">Savings club</small></span>
       <svg className="wordmark__chev" viewBox="0 0 34 24" fill="currentColor" aria-hidden="true">
         <path d="M0 0h6l9 12-9 12H0l9-12z" />
         <path d="M9.5 0h6l9 12-9 12h-6l9-12z" />

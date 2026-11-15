@@ -2,7 +2,7 @@
 
 [![CI](https://github.com/Eric-65/Ajo-Bridge/actions/workflows/ci.yml/badge.svg)](https://github.com/Eric-65/Ajo-Bridge/actions/workflows/ci.yml)
 
-A rotating savings circle (ajo / esusu / susu) on NEAR where nobody can run off with the money — not the collector, and not the member who gets paid first — and anyone, anywhere can contribute from any chain via NEAR Intents.
+A savings club for anyone, anywhere: a rotating savings circle (ajo / esusu / susu / tanda / chama, also called a ROSCA) on NEAR where nobody can run off with the money — not the collector, and not the member who gets paid first — and anyone, anywhere can contribute from any chain via NEAR Intents.
 
 Built Nov 13–14, 2026 for **NEAR HACKATHON — Build Beyond Boundaries**.
 Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`) and **AI Security & Defense** (`security`).

@@ -824,3 +824,6 @@
 .switch input:checked + .switch__track::after { transform: translateX(1.25rem); background: var(--ink); }
 .switch input:focus-visible + .switch__track { outline: 3px solid var(--mint); outline-offset: 2px; }
 .switch small { color: #b9b9b9; font-size: var(--text-xs); }
+
+/* Sign-in: when an invited visitor is scrolled to the form, keep it clear of the sticky header. */
+.signin-form { scroll-margin-top: var(--header-h); }

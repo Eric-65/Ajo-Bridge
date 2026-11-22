@@ -1,4 +1,4 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { useNavigate, useSearchParams } from 'react-router';
 
 import { PhotoHead } from '../components/Art.jsx';
@@ -31,9 +31,21 @@ export function SignInPage() {
   const [busy, setBusy] = useState(null);
   const [error, setError] = useState(null);
   const invited = search.get('ref');
+  const formRef = useRef(null);
 
   useEffect(() => { if (invited) captureRef(invited); }, [invited]);
   useEffect(() => { if (ready && user) navigate('/community', { replace: true }); }, [ready, user, navigate]);
+
+  // Invited visitors came to sign up: bring the Google button and email form into view
+  // straight away (after the router's own scroll-to-top on navigation has run).
+  const scrolled = useRef(false);
+  useEffect(() => {
+    if (!invited || !configured || !ready || user || scrolled.current) return undefined;
+    scrolled.current = true;
+    const reduce = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    const timer = setTimeout(() => formRef.current?.scrollIntoView({ behavior: reduce ? 'auto' : 'smooth', block: 'start' }), 300);
+    return () => clearTimeout(timer);
+  }, [invited, configured, ready, user]);
 
   async function run(key, fn) {
     setBusy(key);
@@ -58,8 +70,9 @@ export function SignInPage() {
         <h1 className="display">{mode === 'signin' ? 'Welcome back' : 'Join Ajo Bridge'}</h1>
         <p className="subtitle">An account gives you your own invite link and shows how many friends you have brought in. Your email is never shown to anyone.</p>
       </PhotoHead>
-      <section className="section section--tight on-panel">
+      <section ref={formRef} className="section section--tight on-panel signin-form">
         <div className="wrap stack stack--lg" style={{ maxWidth: '34rem' }}>
+          {invited ? <p className="label">You were invited. Create your account to join.</p> : null}
           <button type="button" className="google-btn" onClick={() => run('google', signInWithGoogle)} disabled={Boolean(busy)}>
             <GoogleMark /> <span>{busy === 'google' ? 'Opening Google…' : 'Continue with Google'}</span>
           </button>

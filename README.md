@@ -131,7 +131,21 @@ Signed against `ajobridge-circles.testnet` on Nov 14, 2026 by `scripts/seed-test
 | `contribute` | round 1 (the other member does not pay) | [J9A4AT6T9H…](https://testnet.nearblocks.io/txns/J9A4AT6T9HiPvxsopHq6876iro2ToXakznjmEWR3gkVN) |
 | `settle_round` | after the deadline, by a third account: the non-payer is slashed 0.5 NEAR, the recipient is paid | [Hn7EPVegPw…](https://testnet.nearblocks.io/txns/Hn7EPVegPwoBNWTKiy6mX3J5yPD235izUiZsDd9Xy6Qr) |
 
-**Signed in the browser by real users (Nov 15, 2026):** after launch, two people created and joined circles from Meteor Wallet on their phones: **#6 Portland market** (created by `eric0xbt.testnet`; `eric0xbt.testnet` and `davidmalen9.testnet` each took a slot), **#7 Church Savings** (created by `davidmalen9.testnet`; both took a slot) and **#8 My circle** (created by `eric0xbt.testnet`). Both members of #6 locked only the 10% reserve, so the circle waited for a backer and never started. That is why the slot drawer now defaults to the full collateral, and why a member's own slot has **Top up my collateral** and **Leave and get my deposit back**.
+**Signed in the browser by real users (Nov 15–16, 2026):** after launch, two people used the hosted app with Meteor Wallet on their phones. These are their transactions, found from each circle's on-chain history (the event timestamps lead to the blocks; the explorer API was not reachable from the build machine):
+
+| Circle | Method | Signed by | NEAR attached | Transaction |
+| --- | --- | --- | --- | --- |
+| #6 Portland market | `create_circle` | `eric0xbt.testnet` | 0.13 (storage) | [iCnB4beovm…](https://testnet.nearblocks.io/txns/iCnB4beovmGG7G5VeSWvvRgSu7nCJCmgNb8HKURscsW) |
+| #6 | `join` slot 1, 10% reserve | `eric0xbt.testnet` | 0.5 | [GLcdytfA3z…](https://testnet.nearblocks.io/txns/GLcdytfA3zwDtKJw1oXBd72wcumCcDAtsef6je2opN8a) |
+| #6 | `join` slot 2, 10% reserve | `davidmalen9.testnet` | 0.5 | [CseKKDNsEm…](https://testnet.nearblocks.io/txns/CseKKDNsEm1MQm4B8VYPR1MZQZG5BUrUDA4BXeXuuSjf) |
+| #7 Church Savings | `create_circle` | `davidmalen9.testnet` | 0.155 (storage) | [HisdQyD1AA…](https://testnet.nearblocks.io/txns/HisdQyD1AAy3Y2eFo4qv41J3pu5y2DXBLHC4EaBLRVbi) |
+| #7 | `join` slot 1, 10% reserve | `davidmalen9.testnet` | 0.6 | [2g14xoSKJg…](https://testnet.nearblocks.io/txns/2g14xoSKJguxwnDTRbe6HnwbtMjXqyx4wDr9oAXWw5uE) |
+| #7 | `join` slot 3, 10% reserve | `eric0xbt.testnet` | 0.3 | [68wvtDZ58P…](https://testnet.nearblocks.io/txns/68wvtDZ58PvnMpVmLy6Wi1KFtAMwZPGLk8651M8ER1z3) |
+| #7 | `leave` (full refund) | `eric0xbt.testnet` | 0 | [DTMEY1e25Y…](https://testnet.nearblocks.io/txns/DTMEY1e25YaRc7Vr7FYMSJeWMpBny65WoyBvrHEN5mfa) |
+| #7 | `join` slot 3 again, 10% reserve | `eric0xbt.testnet` | 0.3 | [DKekDbvp4U…](https://testnet.nearblocks.io/txns/DKekDbvp4U4inX23pFgJESP8WAdWweV6TAhTVmJxLnWm) |
+| #8 My circle | `create_circle` | `eric0xbt.testnet` | 0.205 (storage) | [dE3en5b9go…](https://testnet.nearblocks.io/txns/dE3en5b9goTjbu9btQTEfbZ7JNAk5oib1WVwKdn4j1n) |
+
+Every slot was taken with only the 10% reserve, so #6 and #7 waited for a backer and never started. That is why the slot drawer now defaults to the full collateral, and why a member's own slot has **Top up my collateral** and **Leave and get my deposit back**.
 
 An earlier seeding run was slowed by a rate-limited RPC and also created circles #0–#2 with the same names. They are real but duplicates, so the app leaves them out of lists and totals (`HIDDEN_CIRCLES` in `web/src/lib/config.js`); a direct link still opens them, labelled **Test circle**.
 

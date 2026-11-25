@@ -7,7 +7,7 @@ A savings club for anyone, anywhere: a rotating savings circle (ajo / esusu / su
 Built Nov 13–14, 2026 for **NEAR HACKATHON — Build Beyond Boundaries**.
 Track: **Real-World Money** (`realworld`). Also fits **Social Money** (`social`) and **AI Security & Defense** (`security`).
 
-**Live demo:** https://ajo-bridge.vercel.app (no wallet needed: it opens in demo mode)
+**Live app:** https://ajo-bridge.vercel.app (opens live on NEAR testnet; no wallet needed to look around, and **Try the demo** runs a copy in your browser). `ajo-bridge-web.vercel.app` redirects here.
 
 **Contents:** [What it does](#what-it-does) · [Screenshots](#screenshots) · [The problem it solves](#the-problem-it-solves) · [How to run it](#how-to-run-it) · [Try it: do X, see Y](#try-it-do-x-see-y) · [Status](#status-what-was-run-and-what-was-not) · [How it works](#how-it-works) · [NEAR tech](#near-tech-used-and-where) · [Deploy](#deploy)
 
@@ -66,7 +66,7 @@ Each row is one action and what you should see. Button names are written as they
 
 | # | Do | See |
 | --- | --- | --- |
-| 1 | Run `npm run test:math` | `# pass 43` and `# fail 0`. Includes the walk-away invariant for every circle size from 2 to 8 and every slot, plus 5,000 random default patterns. |
+| 1 | Run `npm run test:math` | `# pass 52` and `# fail 0`. Includes the walk-away invariant for every circle size from 2 to 8 and every slot, plus 5,000 random default patterns. |
 | 2 | Run `npm run demo` | A round-by-round replay of 5 members at 20 NEAR. Ends with `✓ INVARIANT HOLDS: walking away earned nothing and every other member was made whole.` The ledger row for `ada` (who walked) shows net `-0.80`. |
 | 3 | Run `node scripts/demo.js --coverage 5000` | `✗ The group was left short.` `ada` has net `+39.20` and two members are `left short 20.00`. This is why strangers should use 100% coverage. |
 | 4 | Run `node scripts/demo.js --vouch 40` | `uncle.london` is slashed for the first two missed rounds before `ada`'s own collateral is touched. |
@@ -89,8 +89,8 @@ Open https://ajo-bridge.vercel.app, or run it locally with `cd web && npm instal
 | 14 | On the same page choose **Friends · 50%** and play again | The verdict changes to `ADA GAINED +39.20. THE GROUP IS SHORT 40 NEAR.` |
 | 15 | Open **Start a circle**. Switch between **Strangers · 100%** and **Friends · 50%**, and move the order-fee slider | The collateral bars animate: 80 / 60 / 40 / 20 / 20 for strangers, 40 / 30 / 20 / 20 / 20 for friends. |
 | 16 | Type a name and press **› CREATE CIRCLE** | You land on the new circle's page with the tag **FILLING: PICK A SLOT** and five open slots. |
-| 17 | On a running circle press **› PAY FROM ANY CHAIN** | A drawer with **MAINNET** and **TESTNET** labels. If the 1Click API is reachable you see a live quote for USDC on Base; if not, the drawer says quotes are unavailable. It never shows a made-up quote. |
-| 18 | Tap **› CONNECT WALLET** in the header | The wallet picker opens with **Meteor Wallet** first, then other testnet wallets. After you connect, the button turns into your account name with a mint dot; tap it to see the network and **Disconnect**. Until the testnet contract is deployed, circles stay on demo data and the banner says so. |
+| 17 | On a running circle press **› PAY FROM ANY CHAIN** | A drawer with **MAINNET** and **TESTNET** labels. **1 round** is picked, so the quote is for exactly one contribution (20 NEAR here), with the dollar value. The quote lists what you send, the least 1Click accepts, what you receive, fees, time and the refund fee, and says the NEAR **lands in your NEAR mainnet account**. **Get deposit address** stays grey with a list of what is missing until the mainnet account, a refund address in the right format for the chain, and the "not from an exchange" box are filled in. If the 1Click API is unreachable the drawer says so. It never shows a made-up quote. |
+| 18 | Tap **› CONNECT WALLET** in the header | The wallet picker opens with **Meteor Wallet** first, then other testnet wallets. After you connect, the button turns into your account name with a mint dot; tap it to see the network and **Disconnect**. |
 
 ### Live on NEAR testnet (real wallet, real transactions)
 
@@ -131,7 +131,9 @@ Signed against `ajobridge-circles.testnet` on Nov 14, 2026 by `scripts/seed-test
 | `contribute` | round 1 (the other member does not pay) | [J9A4AT6T9H…](https://testnet.nearblocks.io/txns/J9A4AT6T9HiPvxsopHq6876iro2ToXakznjmEWR3gkVN) |
 | `settle_round` | after the deadline, by a third account: the non-payer is slashed 0.5 NEAR, the recipient is paid | [Hn7EPVegPw…](https://testnet.nearblocks.io/txns/Hn7EPVegPwoBNWTKiy6mX3J5yPD235izUiZsDd9Xy6Qr) |
 
-**Not yet run end to end:** the same flows signed through Meteor Wallet in the browser. The app code for it is in place (`web/src/lib/chain.js`); try steps L3–L8 above. An earlier seeding run was slowed by a rate-limited RPC and also created circles #0–#2 with the same names; they are real but duplicates.
+**Signed in the browser by real users (Nov 15, 2026):** after launch, two people created and joined circles from Meteor Wallet on their phones: **#6 Portland market** (created by `eric0xbt.testnet`; `eric0xbt.testnet` and `davidmalen9.testnet` each took a slot), **#7 Church Savings** (created by `davidmalen9.testnet`; both took a slot) and **#8 My circle** (created by `eric0xbt.testnet`). Both members of #6 locked only the 10% reserve, so the circle waited for a backer and never started. That is why the slot drawer now defaults to the full collateral, and why a member's own slot has **Top up my collateral** and **Leave and get my deposit back**.
+
+An earlier seeding run was slowed by a rate-limited RPC and also created circles #0–#2 with the same names. They are real but duplicates, so the app leaves them out of lists and totals (`HIDDEN_CIRCLES` in `web/src/lib/config.js`); a direct link still opens them, labelled **Test circle**.
 
 ### Community and invite links
 
@@ -154,19 +156,20 @@ Run `npm run setup` once first.
 | --- | --- | --- |
 | 19 | Run `npm run test:contract` | `10 tests passed` after about 5 minutes. |
 | 20 | Read the test names in the output | `INVARIANT on chain: slot 1 collects the pot and walks away — no gain, nobody else loses` (checked on real account balances). `the Alajo agent: notes only, with a function-call key that cannot move money` (NEAR rejects `contribute`, attached deposits and transfers signed with the agent's key). `custody: there is no way to pull money out of a circle`. `gas and storage: a full 12-member circle where nobody ever pays stays within limits` (heaviest call about 47 Tgas of the 300 Tgas limit). |
-| 21 | Open the **CI** badge at the top of this page | The same three jobs (unit tests, contract sandbox tests, web build) passing on GitHub's machines. |
+| 21 | Open the **CI** badge at the top of this page | The unit tests, contract sandbox tests, web build, community rules and end-to-end jobs passing on GitHub's machines. |
 
 ## Status: what was run and what was not
 
 | Thing | State |
 | --- | --- |
-| Shared math + circle engine, 43 unit tests | Done, passing |
+| Shared math, circle engine and pay-from-any-chain helpers, 52 unit tests | Done, passing |
+| End-to-end tests (Playwright, phone screen, demo mode, 1Click mocked), 13 tests | Done, passing (`cd web && npm run e2e`) |
 | near-sdk-js contract, 10 sandbox tests | Done, passing |
 | Web app | **Live by default** (since Nov 14): reads `ajobridge-circles.testnet` with view calls, no wallet needed; signing needs a testnet wallet. Demo is opt-in (**Try the demo**) or automatic if no RPC answers |
-| Pay-from-any-chain (1Click proxy + drawer) | **Quotes verified live** (Actions → Live checks): mainnet `dry` quotes for $20 of USDC on Base and SOL, $120 of USDT on Tron (1Click has a $100 minimum on that route), and the hosted `/api/tokens` proxy. **Not tested:** a real deposit (`dry: false`) and the status tracker after a deposit |
+| Pay-from-any-chain (1Click proxy + drawer) | **Quotes verified live:** mainnet `dry` quotes, including `EXACT_OUTPUT` (0.5 NEAR from Base USDC quoted 1.512889 USDC on Nov 25, 2026). Measured route minimums: Base, Arbitrum and Solana USDC and SOL quote from $0.50; Tron USDT is refused below $100. **Not tested:** a real deposit (`dry: false`) and the status tracker after a deposit |
 | Alajo (`/api/alajo`, `agent/alajo.js`) | **Verified live:** the hosted `/api/alajo` answers from circle state with the built-in English/Pidgin/Yoruba templates. **Not tested:** NEAR AI Cloud phrasing (no API key configured), and the agent script against testnet. On the deployed contract the agent is the locked contract itself, so `post_note` cannot be called there |
-| Community sign-in and invite links (`/community`, `/r/<code>`) | **Built and tested on the Firebase emulators:** Google and email sign-in, invite links, referral counts, opt-in profile wall; 8 security-rule tests in CI. **Needs** a Firebase project and four Vercel variables before it works on the hosted site ([setup](docs/community-setup.md)) |
-| Continuous integration | GitHub Actions runs the math, contract sandbox and web build jobs on every push |
+| Community sign-in and invite links (`/community`, `/r/<code>`) | **Live on https://ajo-bridge.vercel.app** (Firebase project `ajo-bridge9`): Google and email sign-in, invite links, referral counts, opt-in profile wall; 8 security-rule tests in CI ([setup](docs/community-setup.md)) |
+| Continuous integration | GitHub Actions runs the math, contract sandbox, web build, community rules and end-to-end jobs on every push |
 | Testnet deployment | **Deployed:** [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet), by Actions → Deploy contract to testnet. Initialised, checked with `get_config`, and **locked**: its only full-access key was deleted, so nobody can change its code |
 | Hosted site | https://ajo-bridge.vercel.app — opens in LIVE mode on NEAR testnet. **Live checks** opens it in a real browser and confirms it lists circles from the chain |
 
@@ -353,7 +356,7 @@ SMOKE_URL=https://your-app.vercel.app npm run smoke
 
 `npm run smoke` talks only to real services and exits non-zero if anything fails. `vercel build` was run locally on a fresh copy of the repository: it produces the static site plus four functions (`alajo`, `quote`, `status`, `tokens`).
 
-Live URL: https://ajo-bridge.vercel.app. Deployed contract: [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet) (no access keys: code cannot be changed).
+Live URL: https://ajo-bridge.vercel.app (the one public address: invite links, Firebase sign-in and the social preview image all use it). The second Vercel project, `ajo-bridge-web.vercel.app`, builds the same repository and redirects every path to it (`redirects` in `vercel.json`). Deployed contract: [`ajobridge-circles.testnet`](https://testnet.nearblocks.io/address/ajobridge-circles.testnet) (no access keys: code cannot be changed).
 
 ## Hackathon rules (answers to the HACKATHON.md FAQ)
 
@@ -405,7 +408,9 @@ Front-end notes: no Tailwind, UI kit, CSS-in-JS or animation library. Design tok
 - v1 uses native NEAR, not a stablecoin, so contributions carry NEAR price risk.
 - Cross-chain payments land on mainnet while circles are on testnet; they are not linked on chain in this version.
 - Members who miss a payment lose their whole fee share, even for one late round. Late payments are accepted until somebody calls `settle_round`.
-- Not yet run against live services: signing through Meteor Wallet in the browser (the same contract calls were signed from a script, see *Real testnet transactions*), a real 1Click deposit (only `dry` quotes were checked), and NEAR AI Cloud (no API key configured).
+- Not yet run against live services: a real 1Click deposit (only `dry` quotes were checked) and NEAR AI Cloud (no API key configured).
+- Nobody settles overdue rounds automatically yet: anyone can press **Settle round now**, and the circle page shows a red banner when a round is overdue. A scheduled keeper is planned.
+- v1 has no fill deadline: a circle that never fills stays open until its members leave. Circles #0 and #3 hold 1.5 NEAR put up by seed accounts whose keys were wiped, so that collateral stays locked unless the circles fill.
 
 ## Prior art
 

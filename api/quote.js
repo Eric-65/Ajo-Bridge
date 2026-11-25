@@ -47,7 +47,7 @@ export default async function handler(req, res) {
     return res.status(400).json({ error: error.message });
   }
   try {
-    return relay(res, await oneClick('/v0/quote', { method: 'POST', body: request }));
+    return relay(res, await oneClick('/v0/quote', { method: 'POST', body: request, retry: request.dry }));
   } catch (error) {
     return fail(res, error);
   }

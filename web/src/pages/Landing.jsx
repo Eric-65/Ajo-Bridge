@@ -12,6 +12,7 @@ import { Accordion, Cta, Eyebrow, HighlightHeading, Hl, Scramble, SegmentBar, Sk
 import { near, percent, roundLength } from '../lib/format.js';
 import { countMembers } from '../lib/community.js';
 import { useCommunity } from '../lib/communityStore.jsx';
+import { HIDDEN_CIRCLES } from '../lib/config.js';
 import { circleStats } from '../lib/stats.js';
 import { useAllCircles, useApp, useCircle, useCircles } from '../lib/store.jsx';
 
@@ -68,7 +69,7 @@ function LiveStats() {
           <div className="row row--between"><p className="title">No circles yet — start the first one.</p><Cta to="/create" className="cta--auto">Start a circle</Cta></div>
         ) : (
           <div className="stats">
-            <Stat label="Circles" value={stats.circles} note="Created on the contract" />
+            <Stat label="Circles" value={stats.circles} note={mode === 'testnet' ? `On the contract, not counting ${HIDDEN_CIRCLES.length} test circles` : 'In this demo'} />
             <Stat label="Members" value={stats.members} note="Slots taken across circles" />
             <Stat label="NEAR locked" value={Number(stats.locked / 10n ** 21n) / 1000} format={(n) => n.toFixed(n % 1 ? 2 : 0)} unit="NEAR" note="Collateral plus open pots" />
             <Stat label="Rounds paid" value={stats.roundsPaid} note={`${(Number(stats.paidOut / 10n ** 21n) / 1000).toFixed(2)} NEAR paid out`} />
@@ -80,6 +81,8 @@ function LiveStats() {
 }
 
 export function LandingPage() {
+  const { mode, tryDemo } = useApp();
+  const navigate = useNavigate();
   const { data: circles } = useCircles();
   const open = circles?.find((c) => c.status === 'OPEN');
   const active = circles?.find((c) => c.status === 'ACTIVE') ?? circles?.[0];
@@ -158,7 +161,8 @@ export function LandingPage() {
             <p className="subtitle">A rotating savings circle where the contract is the collector, and the member paid first cannot walk away with a gain.</p>
             <div className="hero__actions">
               <Cta to="/create" size="lg" pull>Start a circle</Cta>
-              <Cta to={`/circle/${active?.id ?? 0}`} size="lg" variant="dark">Open the demo circle</Cta>
+              {/* Demo circle #0 (Balogun Market Traders) runs in the browser: switch to the demo first. */}
+              <Cta size="lg" variant="dark" onClick={() => { if (mode !== 'demo') tryDemo(); navigate('/circle/0', { viewTransition: true }); }}>Try the demo circle</Cta>
             </div>
           </div>
         </div>

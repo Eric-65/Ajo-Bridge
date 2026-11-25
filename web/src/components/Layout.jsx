@@ -127,7 +127,7 @@ function Header() {
             <NavLink key={item.to} to={item.to} style={{ '--i': i }} end viewTransition>{item.label}</NavLink>
           ))}
           <div className="menu__foot stack">
-            <p className="helper">{walletAccount ? `Connected to NEAR testnet as ${walletAccount}.` : 'Connect Meteor Wallet (app, web or browser extension) on NEAR testnet. Without a wallet you can try everything on demo data.'}</p>
+            <p className="helper">{walletAccount ? `Connected to NEAR testnet as ${walletAccount}.` : 'Connect Meteor Wallet (app, web or browser extension) on NEAR testnet. Without a wallet you can still see every live circle, or try the demo.'}</p>
             <Cta onClick={walletAccount ? disconnect : connect} busy={connecting}>{walletAccount ? 'Disconnect wallet' : 'Connect wallet'}</Cta>
             <MenuAccount />
           </div>
@@ -208,7 +208,7 @@ function Footer() {
         </div>
         <div className="stack stack--sm">
           <p className="label">What is live</p>
-          <p className="helper">Circles run on a NEAR <b>testnet</b> contract. Cross-chain quotes come from NEAR Intents 1Click on <b>mainnet</b>. Without a wallet you see local <b>demo</b> data.</p>
+          <p className="helper">Circles run live on a NEAR <b>testnet</b> contract: test money, no real value. Anyone can read them without a wallet; connect one to join or pay. Cross-chain quotes come from NEAR Intents 1Click on <b>mainnet</b>. <b>Try the demo</b> runs a copy in your browser.</p>
         </div>
         <div className="stack stack--sm">
           <p className="label">Not financial advice</p>

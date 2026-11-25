@@ -8,7 +8,8 @@ import { PayDrawer } from '../components/PayDrawer.jsx';
 import { SavingsRing } from '../components/SavingsRing.jsx';
 import { SlotPicker } from '../components/SlotPicker.jsx';
 import { CountUp, Cta, Drawer, Eyebrow, Meter, NetLabel, Scramble, SegmentBar, Skeleton, Stat } from '../components/ui.jsx';
-import { EXPLORER_URL } from '../lib/config.js';
+import { EXPLORER_URL, inviteOrigin, isHiddenCircle } from '../lib/config.js';
+import { circleProgress } from '../lib/stats.js';
 import { demo } from '../lib/demoStore.js';
 import { describeEvent, duration, initial, near, percent, roundLength, shortName, when } from '../lib/format.js';
 import { useApp, useCircle, useNow } from '../lib/store.jsx';
@@ -41,15 +42,52 @@ function JoinDrawer({ circle, slot, onClose, onConfirm, busy }) {
       <div className="choice">
         <label>
           <input type="radio" name="plan" checked={plan === 'full'} onChange={() => setPlan('full')} />
-          <b>Lock it all · {near(required)} NEAR</b><small>You are fully backed straight away.</small>
-        </label>
-        <label>
-          <input type="radio" name="plan" checked={plan === 'reserve'} onChange={() => setPlan('reserve')} />
-          <b>Reserve · {near(reserve)} NEAR</b><small>Hold the slot with 10%. A backer vouches for the other {near(required - reserve)}.</small>
+          <b>Lock the full collateral · {near(required)} NEAR</b><small>Recommended. Your slot is ready, and the circle starts as soon as every slot is full.</small>
         </label>
       </div>
+      <details className="more" open={plan === 'reserve' || undefined}>
+        <summary>Can&apos;t lock it all now?</summary>
+        <div className="choice">
+          <label>
+            <input type="radio" name="plan" checked={plan === 'reserve'} onChange={() => setPlan('reserve')} />
+            <b>Lock 10% now · {near(reserve)} NEAR, and ask a backer for the rest</b>
+            <small>The circle <b>cannot start</b> until someone vouches the other {near(required - reserve)} NEAR for you, or you top up later. If nobody does, you can leave at any time before the start and get your {near(reserve)} NEAR back.</small>
+          </label>
+        </div>
+      </details>
       <Cta size="lg" busy={busy} onClick={() => onConfirm(deposit)}>Lock {near(deposit)} NEAR</Cta>
     </Drawer>
+  );
+}
+
+/** The signed-in member's own slot while the circle fills: top up, or leave with a full refund. */
+function MySlotCard({ circle, me, busy, onTopUp, onLeave }) {
+  const required = requiredCollateral(circle, me.slot);
+  const mine = collateralOf(me);
+  const gap = required - mine;
+  return (
+    <div className="card card--dark">
+      <div className="card__body">
+        <div className="row row--between">
+          <Eyebrow>Your slot · paid {me.slot === 1 ? 'first' : `in round ${me.slot}`}</Eyebrow>
+          <span className={`tag ${gap > 0n ? 'tag--line' : 'tag--mint'}`}>{gap > 0n ? 'Not fully locked' : 'Ready'}</span>
+        </div>
+        <div className="stack stack--sm">
+          <p className="label">{near(mine)} of {near(required)} NEAR locked</p>
+          <span className="lockbar" aria-hidden="true"><i style={{ width: `${Number((mine * 1000n) / required) / 10}%` }} /></span>
+        </div>
+        {gap > 0n ? (
+          <>
+            <p className="subtitle" style={{ color: '#e6e6e6' }}>The circle cannot start until every slot is fully locked. Add the missing {near(gap)} NEAR yourself, or ask someone to vouch for you.</p>
+            <Cta size="lg" busy={busy === 'topup'} onClick={() => onTopUp(gap)}>Top up my collateral · {near(gap)} NEAR</Cta>
+          </>
+        ) : (
+          <p className="subtitle" style={{ color: '#e6e6e6' }}>Your slot is fully locked. The circle starts by itself when every other slot is too.</p>
+        )}
+        <Cta variant="ghost" size="sm" className="cta--auto" busy={busy === 'leave'} onClick={onLeave}>Leave and get my deposit back</Cta>
+        <p className="helper">The circle has not started, so leaving is free: you get back the {near(me.stake)} NEAR you locked, anyone who vouched for you gets theirs back, and your slot opens for someone else.</p>
+      </div>
+    </div>
   );
 }
 
@@ -72,7 +110,7 @@ function VouchDrawer({ circle, member, onClose, onConfirm, busy }) {
 }
 
 function ShareRow({ circle, openSlots, toast, lateList }) {
-  const link = `${window.location.origin}/c/${circle.id}`;
+  const link = `${inviteOrigin()}/c/${circle.id}`;
   const invite = openSlots > 0
     ? `Join my savings circle "${circle.name}" on Ajo Bridge: ${near(circle.contribution)} NEAR per round, ${openSlots} slot${openSlots === 1 ? '' : 's'} open. Nobody can run with the pot. ${link}`
     : `Follow our savings circle "${circle.name}" on Ajo Bridge: ${link}`;
@@ -141,6 +179,7 @@ export function CirclePage() {
   const myVouches = members.filter((m) => m.vouches.some((v) => v.voucher === account && v.amount > 0n));
   const needBacking = circle.status === STATUS.OPEN ? members.filter((m) => collateralOf(m) < requiredCollateral(circle, m.slot)) : [];
   const iPaid = me && me.last_paid_round === circle.round;
+  const progress = circleProgress(circle, now);
   const unpaidList = members.filter((m) => active && m.last_paid_round < circle.round && m.slot !== circle.round).map((m) => m.account);
 
   async function run(key, method, args = {}, deposit = 0n, done, plain = 'Done.') {
@@ -172,8 +211,10 @@ export function CirclePage() {
             <div className="row">
               <span className={`tag ${active ? 'tag--mint' : 'tag--line'}`}>{STATUS_TEXT[circle.status]}</span>
               <NetLabel net={mode === 'testnet' ? 'testnet' : 'demo'}>Circle #{circle.id}</NetLabel>
+              {mode === 'testnet' && isHiddenCircle(circle.id) ? <span className="tag tag--line" title="A duplicate created while seeding the contract. It is real but not listed.">Test circle</span> : null}
             </div>
             <Scramble as="h1" className="display" text={circle.name} />
+            <p className={`status-line${progress.tone === 'red' ? ' danger' : ''}`} style={{ color: progress.tone === 'red' ? undefined : 'var(--mint)' }}>{progress.label}</p>
             <p className="subtitle">{near(circle.contribution)} NEAR every {roundLength(circle.round_ns)} · {circle.n} members · {percent(circle.coverage_bps)} coverage · {percent(circle.order_fee_bps)} order fee</p>
             <ShareRow circle={circle} openSlots={circle.slots.filter((x) => !x).length} toast={toast} lateList={active && pastDeadline ? unpaidList : []} />
             <div className="stack stack--sm" style={{ marginTop: 'var(--s-3)' }}>
@@ -207,6 +248,15 @@ export function CirclePage() {
 
       <section className="section section--tight" aria-label="Actions">
         <div className="wrap stack stack--lg">
+          {pastDeadline ? (
+            <div className="card card--alert" role="status">
+              <div className="card__body">
+                <Eyebrow>Round {circle.round} is overdue</Eyebrow>
+                <p className="subtitle">The deadline passed {duration(now - circle.deadline_ns)} ago. Anyone can settle it now: members who did not pay are covered from their collateral, and {shortName(recipient.account)} is paid.</p>
+                <Cta busy={busy === 'settle'} onClick={() => run('settle', 'settle_round')}>Settle round {circle.round} now</Cta>
+              </div>
+            </div>
+          ) : null}
           {circle.status === STATUS.OPEN ? (
             <>
               <p className="tab" id="slots">Pick your payout slot</p>
@@ -216,13 +266,23 @@ export function CirclePage() {
                   <Cta onClick={connect} busy={connecting} className="cta--auto">Connect wallet</Cta>
                 </div></div>
               ) : null}
+              {me ? (
+                <MySlotCard
+                  circle={circle}
+                  me={me}
+                  busy={busy}
+                  onTopUp={(gap) => run('topup', 'join', { slot: me.slot }, gap, 'Collateral added.')}
+                  onLeave={() => run('leave', 'leave', {}, 0n, 'You left. Your deposit was refunded.')}
+                />
+              ) : null}
               <SlotPicker circle={circle} account={account} busySlot={busy === 'join' ? joinSlot : null} onTake={setJoinSlot} />
               <p className="helper">Earlier slots lock more collateral and pay the order fee. Later slots lock less and earn it. The circle starts when every slot is taken and fully backed.</p>
-              {needBacking.length ? (
+              {needBacking.some((m) => m.account !== account) ? (
                 <div className="card">
                   <div className="stack">
-                    <Eyebrow>Waiting for a backer</Eyebrow>
-                    {needBacking.map((m) => {
+                    <Eyebrow>Still locking</Eyebrow>
+                    <p className="helper">These members hold a slot but have not locked all of it yet. They can top up, or anyone can vouch for them.</p>
+                    {needBacking.filter((m) => m.account !== account).map((m) => {
                       const gap = requiredCollateral(circle, m.slot) - collateralOf(m);
                       const mine = m.account === account;
                       return (
@@ -238,7 +298,6 @@ export function CirclePage() {
                 </div>
               ) : null}
               <div className="row">
-                {me ? <Cta variant="dark" size="sm" className="cta--auto" busy={busy === 'leave'} onClick={() => run('leave', 'leave', {}, 0n, 'You left. Your collateral was refunded.')}>Leave and refund</Cta> : null}
                 {myVouches.map((m) => (
                   <Cta key={m.account} variant="dark" size="sm" className="cta--auto" busy={busy === 'cancel'} onClick={() => run('cancel', 'cancel_vouch', { member: m.account }, 0n, 'Vouch withdrawn and refunded.')}>
                     Withdraw vouch for {shortName(m.account)}

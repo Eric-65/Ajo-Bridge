@@ -8,7 +8,7 @@ export default async function handler(req, res) {
   const memo = req.query?.depositMemo ? `&depositMemo=${encodeURIComponent(String(req.query.depositMemo))}` : '';
   try {
     res.setHeader('Cache-Control', 'no-store');
-    return relay(res, await oneClick(`/v0/status?depositAddress=${encodeURIComponent(depositAddress)}${memo}`));
+    return relay(res, await oneClick(`/v0/status?depositAddress=${encodeURIComponent(depositAddress)}${memo}`, { retry: true }));
   } catch (error) {
     return fail(res, error);
   }

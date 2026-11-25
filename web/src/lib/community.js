@@ -8,6 +8,8 @@
  * secret); access control lives in the security rules.
  */
 
+import { inviteOrigin } from './config.js';
+
 const env = import.meta.env;
 const EMULATOR = env.VITE_FIREBASE_EMULATOR === '1';
 
@@ -35,7 +37,7 @@ export function captureRef(code) {
 const pendingRef = () => { try { return localStorage.getItem(REF_KEY); } catch { return null; } };
 const clearRef = () => { try { localStorage.removeItem(REF_KEY); } catch { /* ignore */ } };
 
-export const inviteLink = (code) => `${window.location.origin}/r/${code}`;
+export const inviteLink = (code) => `${inviteOrigin()}/r/${code}`;
 
 let sdk = null;
 async function load() {

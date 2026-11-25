@@ -100,31 +100,34 @@ export function Scramble({ text, as: Tag = 'h2', className = 'display', delay = 
 }
 
 /** Number that counts up (or down) to `value` with easing whenever it changes. */
+/**
+ * A number that counts up when it first scrolls into view. The real value is in the
+ * markup from the first render, so if the animation never runs (off screen, reduced
+ * motion, slow phone, no IntersectionObserver) the right number is still shown.
+ * Animation frames write to React's own text node, so React's later updates stay correct.
+ */
 export function CountUp({ value, format = (n) => n.toFixed(0), duration = 1100, className }) {
   const ref = useRef(null);
-  const shown = useRef(0);
-  const started = useRef(false);
+  const shown = useRef(null);
   useEffect(() => {
-    const el = ref.current;
-    const run = () => {
-      started.current = true;
-      const from = shown.current;
-      return tween({
-        duration,
-        ease: easeOutExpo,
-        onUpdate: (t) => {
-          shown.current = from + (value - from) * t;
-          el.textContent = format(shown.current);
-        },
-      });
-    };
-    if (started.current) return run();
+    const node = ref.current?.firstChild;
+    const from = shown.current;
+    shown.current = value;
+    if (!node || from === value) return undefined;
+    const animate = (start) => tween({
+      duration,
+      ease: easeOutExpo,
+      onUpdate: (t) => { node.nodeValue = format(start + (value - start) * t); },
+      onDone: () => { node.nodeValue = format(value); },
+    });
+    if (from !== null) return animate(from);
+    // First render: the real value is already showing. Count up from 0 once it is seen.
     let cancel = () => {};
-    const stop = onceInView(el, () => { cancel = run(); }, { threshold: 0.1 });
-    return () => { stop(); cancel(); };
+    const stop = onceInView(ref.current, () => { cancel = animate(0); }, { threshold: 0.1 });
+    return () => { stop(); cancel(); node.nodeValue = format(value); };
     // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [value]);
-  return <span ref={ref} className={className} aria-label={format(value)}>{format(0)}</span>;
+  return <span ref={ref} className={className}>{format(value)}</span>;
 }
 
 /** Circle rounds as segments: past = grey, current = pulsing mint, upcoming = pale mint. */

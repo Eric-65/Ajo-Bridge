@@ -64,3 +64,18 @@ jobs:
           java-version: 21
       - run: cd web && npm ci
       - run: npm run test:community
+
+  e2e:
+    name: End-to-end (Playwright, demo mode, 1Click mocked)
+    runs-on: ubuntu-latest
+    timeout-minutes: 20
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: npm
+          cache-dependency-path: web/package-lock.json
+      - run: cd web && npm ci
+      - run: cd web && npx playwright install --with-deps chromium
+      - run: cd web && npm run e2e -- --trace off

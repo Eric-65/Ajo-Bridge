@@ -5,7 +5,9 @@
  */
 import { deserializeCircle } from '@shared/ajoEngine.js';
 
-import { CONTRACT_ID, GAS, GAS_RESERVE, NETWORK, RPC_URLS } from './config.js';
+import { CONTRACT_ID, GAS, GAS_RESERVE, NETWORK, RPC_URLS, isHiddenCircle } from './config.js';
+
+const LIST_PAGE = 50; // the contract's list_circles maximum
 
 const encoder = new TextEncoder();
 const decoder = new TextDecoder();
@@ -150,7 +152,20 @@ export const chain = {
   now: () => BigInt(Date.now()) * 1_000_000n,
   get account() { return walletAccount; },
 
-  list: () => view('list_circles', { limit: 30 }),
+  /** Every listed circle, page by page, without the hidden test circles. */
+  async list() {
+    // list_circles walks down from from_index (newest first when omitted).
+    const all = [];
+    let args = { limit: LIST_PAGE };
+    for (;;) {
+      const page = await view('list_circles', args);
+      all.push(...page);
+      const lowest = page.at(-1)?.id;
+      if (page.length < LIST_PAGE || !lowest) break;
+      args = { from_index: lowest - 1, limit: LIST_PAGE };
+    }
+    return all.filter((c) => !isHiddenCircle(c.id)).sort((a, b) => b.id - a.id);
+  },
 
   async get(id) {
     const raw = await view('get_circle', { circle_id: Number(id) });

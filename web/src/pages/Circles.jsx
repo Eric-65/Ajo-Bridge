@@ -3,9 +3,11 @@ import { useState } from 'react';
 import { PhotoHead } from '../components/Art.jsx';
 import { Cta, Eyebrow, Scramble, SegmentBar, Skeleton } from '../components/ui.jsx';
 import { near, percent, roundLength } from '../lib/format.js';
-import { useApp, useCircles } from '../lib/store.jsx';
+import { circleProgress } from '../lib/stats.js';
+import { useAllCircles, useApp, useNow } from '../lib/store.jsx';
 
 const STATUS_LABEL = { OPEN: 'Filling', ACTIVE: 'Running', AWAITING_FINALIZE: 'Ready to close', COMPLETED: 'Completed' };
+export const TONE_CLASS = { mint: 'tag--mint', dark: 'tag--dark', red: 'tag--red', amber: 'tag--line', '': '' };
 
 const FILTERS = [
   { key: 'ALL', label: 'All' },
@@ -17,7 +19,8 @@ const matches = (filter, status) => filter === 'ALL' || (filter === 'DONE' ? sta
 
 export function CirclesPage() {
   const { mode } = useApp();
-  const { data: circles, error, loading } = useCircles();
+  const { data: circles, error, loading } = useAllCircles();
+  const now = useNow();
   const [filter, setFilter] = useState('ALL');
   const shown = circles?.filter((c) => matches(filter, c.status)) ?? [];
   return (
@@ -44,29 +47,31 @@ export function CirclesPage() {
           {circles && circles.length > 0 && shown.length === 0 ? <p className="subtitle">No circles in this filter.</p> : null}
           <div className="stack stagger">
             {shown.map((c, i) => {
-              const open = c.members - c.joined;
+              const progress = circleProgress(c, now);
+              const taken = c.n - progress.open;
               return (
                 <article key={c.id} className="card" style={{ '--i': i }}>
                   <div className="card__body">
                     <div className="row row--between">
-                      <span className={`tag ${c.status === 'OPEN' ? 'tag--mint' : c.status === 'ACTIVE' ? 'tag--dark' : ''}`}>{STATUS_LABEL[c.status]}</span>
+                      <span className={`tag ${TONE_CLASS[progress.tone]}`}>{STATUS_LABEL[c.status]}</span>
                       <span className="helper">Circle #{c.id}</span>
                     </div>
                     <h2 className="title">{c.name}</h2>
                     <SegmentBar
-                      total={c.members}
-                      current={c.status === 'OPEN' ? c.joined + 1 : c.round}
+                      total={c.n}
+                      current={c.status === 'OPEN' ? taken + 1 : c.round}
                       done={c.status === 'AWAITING_FINALIZE' || c.status === 'COMPLETED'}
-                      label={c.status === 'OPEN' ? `${c.joined} of ${c.members} slots taken` : `Round ${c.round} of ${c.members}`}
+                      label={c.status === 'OPEN' ? `${taken} of ${c.n} slots taken` : `Round ${c.round} of ${c.n}`}
                     />
+                    <p className={`status-line${progress.tone === 'red' ? ' danger' : ''}`}>{progress.label}</p>
                     <dl className="card-facts">
                       <div><dt>Contribution</dt><dd>{near(c.contribution)} NEAR / {roundLength(c.round_ns)}</dd></div>
-                      <div><dt>Members</dt><dd>{c.joined} / {c.members}</dd></div>
-                      <div><dt>Open slots</dt><dd>{c.status === 'OPEN' ? open : 0}</dd></div>
-                      <div><dt>Round</dt><dd>{c.status === 'OPEN' ? 'Not started' : c.status === 'ACTIVE' ? `${c.round} of ${c.members}` : 'Finished'}</dd></div>
+                      <div><dt>Members</dt><dd>{taken} / {c.n}</dd></div>
+                      <div><dt>Open slots</dt><dd>{progress.open}</dd></div>
+                      <div><dt>Round</dt><dd>{c.status === 'OPEN' ? 'Not started' : c.status === 'ACTIVE' ? `${c.round} of ${c.n}` : 'Finished'}</dd></div>
                     </dl>
                     <p className="helper">{percent(c.coverage_bps)} coverage · {percent(c.order_fee_bps)} order fee</p>
-                    <Cta to={`/circle/${c.id}`}>{c.status === 'OPEN' ? `Pick a slot · ${open} open` : 'Open circle'}</Cta>
+                    <Cta to={`/circle/${c.id}`}>{progress.cta}</Cta>
                   </div>
                 </article>
               );

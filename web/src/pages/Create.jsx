@@ -134,7 +134,7 @@ export function CreatePage() {
               </div>
             </div>
             <NetLabel net={mode === 'testnet' ? 'testnet' : 'demo'}>
-              {mode === 'testnet' ? 'Creates the circle on the NEAR testnet contract. A small storage fee is attached.' : 'Creates a local demo circle. Connect a wallet to create it on testnet.'}
+              {mode === 'testnet' ? 'Creates the circle on the NEAR testnet contract. A small storage fee is attached.' : 'Creates a circle in the demo only. Leave the demo (grey banner) to create a real one on testnet.'}
             </NetLabel>
             <Cta type="submit" size="lg" busy={busy} disabled={!valid || undefined} pull>Create circle</Cta>
           </div>

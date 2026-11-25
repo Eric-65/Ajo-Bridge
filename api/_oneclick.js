@@ -10,7 +10,23 @@
 
 export const ONECLICK_BASE = process.env.ONECLICK_BASE_URL || 'https://1click.chaindefuser.com';
 
-export async function oneClick(path, { method = 'GET', body } = {}) {
+/**
+ * Call 1Click. `retry` repeats once after a 5xx or a network error; use it only for
+ * requests that are safe to repeat (GETs and dry quotes, never a dry: false quote,
+ * which would create a second deposit address).
+ */
+export async function oneClick(path, { method = 'GET', body, retry = false } = {}) {
+  try {
+    const first = await oneClickOnce(path, { method, body });
+    if (!retry || first.status < 500) return first;
+  } catch (error) {
+    if (!retry) throw error;
+  }
+  await new Promise((resolve) => setTimeout(resolve, 600));
+  return oneClickOnce(path, { method, body });
+}
+
+async function oneClickOnce(path, { method, body }) {
   const headers = { Accept: 'application/json' };
   if (body) headers['Content-Type'] = 'application/json';
   if (process.env.ONECLICK_JWT) headers.Authorization = `Bearer ${process.env.ONECLICK_JWT}`;
@@ -31,7 +47,7 @@ export async function oneClick(path, { method = 'GET', body } = {}) {
 export function relay(res, upstream) {
   if (upstream.status >= 200 && upstream.status < 300) return res.status(200).json(upstream.data);
   return res.status(upstream.status === 400 ? 400 : 502).json({
-    error: upstream.data?.message ?? 'The 1Click API rejected the request',
+    error: upstream.data?.message ?? (upstream.status >= 500 ? 'The 1Click API is busy right now. Try again in a minute.' : 'The 1Click API rejected the request'),
     upstreamStatus: upstream.status,
   });
 }

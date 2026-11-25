@@ -827,3 +827,24 @@
 
 /* Sign-in: when an invited visitor is scrolled to the form, keep it clear of the sticky header. */
 .signin-form { scroll-margin-top: var(--header-h); }
+
+/* One plain sentence on a circle card: what the circle is waiting for. */
+.status-line { font-weight: 600; font-size: var(--text-sm); }
+
+/* Circle page: overdue banner, "your slot" lock bar, and a secondary option tucked behind a summary. */
+.card--alert { box-shadow: inset 0 0 0 2px var(--red); }
+.card--alert .eyebrow { color: var(--red); }
+.lockbar { display: block; height: 0.6rem; background: #3a3a3a; }
+.lockbar > i { display: block; height: 100%; background: var(--mint); transition: width var(--base) var(--ease-out); }
+.more > summary { cursor: pointer; font-weight: 600; text-decoration: underline; text-underline-offset: 0.2em; padding-block: var(--s-2); }
+.more[open] > summary { margin-bottom: var(--s-2); }
+
+/* Pay drawer: quote breakdown, the "why is the button grey" list, and the safety tick box. */
+.facts--quote { grid-template-columns: 1fr; gap: var(--s-2); }
+.facts--quote > div { display: flex; justify-content: space-between; gap: var(--s-3); flex-wrap: wrap; }
+.facts--quote dt { color: #bdbdbd; }
+.facts--quote dd { text-align: right; font-variant-numeric: tabular-nums; font-size: var(--text-sm); letter-spacing: 0; }
+.reasons { margin: 0; padding-left: 1.1rem; display: grid; gap: var(--s-1); font-size: var(--text-sm); color: #d6d6d6; }
+.reasons li::marker { content: '› '; color: var(--mint); font-weight: 700; }
+.check { display: flex; gap: var(--s-2); align-items: flex-start; font-size: var(--text-sm); cursor: pointer; }
+.check input { width: 1.2rem; height: 1.2rem; margin-top: 0.1rem; accent-color: var(--mint); flex: none; }
